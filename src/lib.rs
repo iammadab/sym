@@ -3,7 +3,23 @@ use std::ops::{Add, Mul, Sub};
 #[derive(Clone, Debug)]
 enum Atom {
     Variable(&'static str),
-    Integer(usize),
+    Integer(isize),
+}
+
+impl Atom {
+    fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
+        match self {
+            Atom::Integer(val) => *val,
+            Atom::Variable(variable_name) => {
+                for (var, val) in substitution_map {
+                    if var == variable_name {
+                        return *val;
+                    }
+                }
+                panic!("didn't assign a concrete value to all variables");
+            }
+        }
+    }
 }
 
 impl From<Atom> for Expression {
@@ -54,8 +70,17 @@ enum Expression {
 }
 
 impl Expression {
-    fn neg(&self) -> Expression {
-        Expression::Neg(Box::new(self.clone()))
+    fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
+        match self {
+            Expression::Atom(atom) => atom.evaluate(substitution_map),
+            Expression::Neg(expr) => -1 * expr.evaluate(substitution_map),
+            Expression::Add(left, right) => {
+                left.evaluate(substitution_map) + right.evaluate(substitution_map)
+            }
+            Expression::Mul(left, right) => {
+                left.evaluate(substitution_map) * right.evaluate(substitution_map)
+            }
+        }
     }
 }
 
