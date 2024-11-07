@@ -209,12 +209,11 @@ mod tests {
 
     #[test]
     fn fake_test() {
-        let x = Atom::Variable("x");
-        let y = &x + &Atom::Integer(1);
-        let z = &y * &Atom::Integer(2);
-        let m = &z - &Atom::Integer(3);
-        // dbg!(m);
-
-        println!("{}", m);
+        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        // 2x + 3y
+        let expr = &(&x * &Atom::Integer(2)) + &(&y * &Atom::Integer(3));
+        println!("{}", expr);
+        let expr = expr.substitute(&[("x", 5)]);
+        println!("{}", expr);
     }
 }
