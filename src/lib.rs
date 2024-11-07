@@ -122,14 +122,14 @@ impl Expression {
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Expression::Atom(atom) => atom.substitute(substitution_map).into(),
-            Expression::Neg(expr) => Expression::Neg(Box::new(expr.substitute(substitution_map))),
-            Expression::Add(left, right) => Expression::Add(
-                Box::new(left.substitute(substitution_map)),
-                Box::new(right.substitute(substitution_map)),
+            Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
+            Expression::Add(left, right) => Expression::add(
+                left.substitute(substitution_map),
+                right.substitute(substitution_map),
             ),
-            Expression::Mul(left, right) => Expression::Mul(
-                Box::new(left.substitute(substitution_map)),
-                Box::new(right.substitute(substitution_map)),
+            Expression::Mul(left, right) => Expression::mul(
+                left.substitute(substitution_map),
+                right.substitute(substitution_map),
             ),
         }
     }
