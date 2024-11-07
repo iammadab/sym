@@ -95,7 +95,13 @@ enum Expression {
 
 impl Expression {
     fn neg(expression: Self) -> Self {
-        Expression::Neg(Box::new(expression))
+        match expression {
+            Expression::Atom(ref atom) => match atom {
+                Atom::Integer(value) => Atom::Integer(-1 * value).into(),
+                _ => Expression::Neg(Box::new(expression)),
+            },
+            _ => Expression::Neg(Box::new(expression)),
+        }
     }
 
     fn add(left: Self, right: Self) -> Self {
