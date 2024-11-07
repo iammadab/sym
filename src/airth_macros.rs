@@ -3,15 +3,12 @@ use crate::Expression;
 use std::ops::{Add, Mul, Neg, Sub};
 #[macro_export]
 macro_rules! impl_atom_add {
-    ($lhs:ty, $rhs:ty) => {
+    ($lhs:ty, $rhs:ty, $conversion:ident) => {
         impl Add<$rhs> for $lhs {
             type Output = Expression;
 
             fn add(self, rhs: $rhs) -> Self::Output {
-                // what I want to do
-                // if lhs is reference clone, if it is not a reference keep as is
-                // same thing for rhs
-                Expression::Add(Box::new(self.into()), Box::new(rhs.into()))
+                Expression::Add(Box::new(self.$conversion()), Box::new(rhs.$conversion()))
             }
         }
     };
@@ -19,14 +16,14 @@ macro_rules! impl_atom_add {
 
 #[macro_export]
 macro_rules! impl_atom_sub {
-    ($lhs:ty, $rhs:ty) => {
+    ($lhs:ty, $rhs:ty, $conversion:ident) => {
         impl Sub<$rhs> for $lhs {
             type Output = Expression;
 
             fn sub(self, rhs: $rhs) -> Self::Output {
                 Expression::Add(
-                    Box::new(self.into()),
-                    Box::new(Expression::Neg(Box::new(rhs.into()))),
+                    Box::new(self.$conversion()),
+                    Box::new(Expression::Neg(Box::new(rhs.$conversion()))),
                 )
             }
         }
@@ -35,12 +32,12 @@ macro_rules! impl_atom_sub {
 
 #[macro_export]
 macro_rules! impl_atom_mul {
-    ($lhs:ty, $rhs:ty) => {
+    ($lhs:ty, $rhs:ty, $conversion:ident) => {
         impl Mul<$rhs> for $lhs {
             type Output = Expression;
 
             fn mul(self, rhs: $rhs) -> Self::Output {
-                Expression::Mul(Box::new(self.into()), Box::new(rhs.into()))
+                Expression::Mul(Box::new(self.$conversion()), Box::new(rhs.$conversion()))
             }
         }
     };
@@ -48,61 +45,20 @@ macro_rules! impl_atom_mul {
 
 #[macro_export]
 macro_rules! impl_type_combination {
-    ($impl_name:ident, $type_name:ty) => {
-        $impl_name!($type_name, $type_name);
-        $impl_name!(&$type_name, &$type_name);
-        $impl_name!($type_name, &$type_name);
-        $impl_name!(&$type_name, $type_name);
+    ($impl_name:ident, $type_name:ty, $conversion:ident) => {
+        $impl_name!($type_name, $type_name, $conversion);
+        $impl_name!(&$type_name, &$type_name, $conversion);
+        $impl_name!($type_name, &$type_name, $conversion);
+        $impl_name!(&$type_name, $type_name, $conversion);
     };
 }
 
-impl_type_combination!(impl_atom_add, Atom);
-impl_type_combination!(impl_atom_sub, Atom);
-impl_type_combination!(impl_atom_mul, Atom);
+/// Atom arithmetic operations
+impl_type_combination!(impl_atom_add, Atom, into);
+impl_type_combination!(impl_atom_sub, Atom, into);
+impl_type_combination!(impl_atom_mul, Atom, into);
 
-// TODO: handle duplication (only difference is .into() and .clone())
-#[macro_export]
-macro_rules! impl_expression_add {
-    ($lhs:ty, $rhs:ty) => {
-        impl Add<$rhs> for $lhs {
-            type Output = Expression;
-
-            fn add(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! impl_expression_sub {
-    ($lhs:ty, $rhs:ty) => {
-        impl Sub<$rhs> for $lhs {
-            type Output = Expression;
-
-            fn sub(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(
-                    Box::new(self.clone()),
-                    Box::new(Expression::Neg(Box::new(rhs.clone()))),
-                )
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! impl_expression_mul {
-    ($lhs:ty, $rhs:ty) => {
-        impl Mul<$rhs> for $lhs {
-            type Output = Expression;
-
-            fn mul(self, rhs: $rhs) -> Self::Output {
-                Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
-            }
-        }
-    };
-}
-
-impl_type_combination!(impl_expression_add, Expression);
-impl_type_combination!(impl_expression_sub, Expression);
-impl_type_combination!(impl_expression_mul, Expression);
+/// Expression arithmetic operations
+impl_type_combination!(impl_atom_add, Expression, clone);
+impl_type_combination!(impl_atom_sub, Expression, clone);
+impl_type_combination!(impl_atom_mul, Expression, clone);
