@@ -1,6 +1,6 @@
 mod airth_macros;
 
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{format, Display, Formatter, Write};
 
 #[derive(Clone, Debug, PartialEq)]
 enum Atom {
@@ -137,6 +137,21 @@ impl Expression {
             _ => None,
         }
     }
+
+    fn long_form_negation(&self) -> Option<String> {
+        match self {
+            Expression::Neg(expr) => match &**expr {
+                Expression::Atom(atom) => match atom {
+                    Atom::Variable(var_name) => {
+                        return Some(format!(" - {}", var_name).to_string());
+                    }
+                    _ => None,
+                },
+                _ => None,
+            },
+            _ => None,
+        }
+    }
 }
 
 impl Display for Expression {
@@ -223,5 +238,22 @@ mod tests {
         assert_eq!(a, b);
         assert_eq!(b, c);
         assert_eq!(c, d);
+    }
+
+    #[test]
+    fn test_long_form_negation() {
+        assert_eq!(Atom::Integer(1).to_expr().long_form_negation(), None);
+        assert_eq!(
+            Expression::neg(Atom::Integer(1).to_expr()).long_form_negation(),
+            None
+        );
+        assert_eq!(
+            Expression::neg(Atom::Variable("x").to_expr()).long_form_negation(),
+            Some(" - x".to_string())
+        );
+        assert_eq!(
+            Expression::neg(Atom::Variable("x").to_expr()).to_string(),
+            "-x".to_string()
+        );
     }
 }
