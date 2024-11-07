@@ -243,17 +243,33 @@ impl Mul<&Atom> for &Expression {
 
 #[cfg(test)]
 mod tests {
-    use crate::Atom;
+    use crate::{Atom, Expression};
+
+    fn expr1() -> Expression {
+        // 2x + 3y - z
+        let (x, y, z) = (
+            Atom::Variable("x"),
+            Atom::Variable("y"),
+            Atom::Variable("z"),
+        );
+        let (two, three) = (Atom::Integer(2), Atom::Integer(3));
+
+        // TODO: implement consuming arithmetic
+        &(&(&two * &x) + &(&three * &y)) - &z
+    }
 
     #[test]
-    fn fake_test() {
-        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
-        // 2x + 3y
-        let expr = &(&x * &Atom::Integer(2)) + &(&y * &Atom::Integer(3));
-        println!("{}", expr);
-        let expr = expr.substitute(&[("x", 5)]);
-        println!("{}", expr);
-        let expr = expr.substitute(&[("y", 5)]);
-        println!("{}", expr);
+    fn test_expression_creation() {
+        assert_eq!(expr1().to_string(), "(((2 * x) + (3 * y)) + -z)");
+    }
+
+    #[test]
+    fn test_expression_evaluation() {
+        todo!()
+    }
+
+    #[test]
+    fn test_expression_substitution() {
+        todo!()
     }
 }
