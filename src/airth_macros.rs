@@ -1,4 +1,3 @@
-use crate::Atom;
 use crate::Expression;
 use std::ops::{Add, Mul, Neg, Sub};
 #[macro_export]
@@ -52,11 +51,6 @@ macro_rules! impl_type_combination {
         $impl_name!(&$type_name, $type_name, $conversion);
     };
 }
-
-// Atom arithmetic operations
-impl_type_combination!(impl_atom_add, Atom, into);
-impl_type_combination!(impl_atom_sub, Atom, into);
-impl_type_combination!(impl_atom_mul, Atom, into);
 
 // Expression arithmetic operations
 impl_type_combination!(impl_atom_add, Expression, clone);

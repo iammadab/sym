@@ -3,69 +3,9 @@ mod airth_macros;
 use std::fmt::{Display, Formatter, Write};
 
 #[derive(Clone, Debug, PartialEq)]
-enum Atom {
+enum Expression {
     Variable(&'static str),
     Integer(isize),
-}
-
-impl Atom {
-    fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
-        match self {
-            Atom::Integer(val) => *val,
-            Atom::Variable(variable_name) => {
-                for (var, val) in substitution_map {
-                    if var == variable_name {
-                        return *val;
-                    }
-                }
-                panic!("didn't assign a concrete value to all variables");
-            }
-        }
-    }
-
-    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
-        match self {
-            Atom::Variable(variable_name) => {
-                for (var, val) in substitution_map {
-                    if var == variable_name {
-                        return Atom::Integer(*val);
-                    }
-                }
-                self.clone()
-            }
-            Atom::Integer(_) => self.clone(),
-        }
-    }
-
-    fn to_expr(&self) -> Expression {
-        self.into()
-    }
-}
-
-impl Display for Atom {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Atom::Variable(var_name) => f.write_str(var_name),
-            Atom::Integer(val) => f.write_str(val.to_string().as_str()),
-        }
-    }
-}
-
-impl From<Atom> for Expression {
-    fn from(value: Atom) -> Expression {
-        Expression::Atom(value)
-    }
-}
-
-impl From<&Atom> for Expression {
-    fn from(value: &Atom) -> Self {
-        value.clone().into()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-enum Expression {
-    Atom(Atom),
     Neg(Box<Expression>),
     Add(Box<Expression>, Box<Expression>),
     Mul(Box<Expression>, Box<Expression>),
@@ -74,7 +14,7 @@ enum Expression {
 impl Expression {
     fn neg(expression: Self) -> Self {
         if let Some(val) = expression.as_integer() {
-            return Atom::Integer(-1 * val).into();
+            return Expression::Integer(-1 * val).into();
         }
 
         Expression::Neg(Box::new(expression))
@@ -83,7 +23,7 @@ impl Expression {
     fn add(left: Self, right: Self) -> Self {
         if let Some(left_val) = left.as_integer() {
             if let Some(right_val) = right.as_integer() {
-                return Atom::Integer(left_val + right_val).into();
+                return Expression::Integer(left_val + right_val).into();
             }
         }
 
@@ -93,7 +33,7 @@ impl Expression {
     fn mul(left: Self, right: Self) -> Self {
         if let Some(left_val) = left.as_integer() {
             if let Some(right_val) = right.as_integer() {
-                return Atom::Integer(left_val * right_val).into();
+                return Expression::Integer(left_val * right_val).into();
             }
         }
 
@@ -102,7 +42,15 @@ impl Expression {
 
     fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
         match self {
-            Expression::Atom(atom) => atom.evaluate(substitution_map),
+            Expression::Integer(val) => *val,
+            Expression::Variable(var_name) => {
+                for (var, val) in substitution_map {
+                    if var == var_name {
+                        return *val;
+                    }
+                }
+                panic!("didn't assign a concrete value to all variables");
+            }
             Expression::Neg(expr) => -1 * expr.evaluate(substitution_map),
             Expression::Add(left, right) => {
                 left.evaluate(substitution_map) + right.evaluate(substitution_map)
@@ -115,7 +63,15 @@ impl Expression {
 
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
-            Expression::Atom(atom) => atom.substitute(substitution_map).into(),
+            Expression::Integer(_) => self.clone(),
+            Expression::Variable(var_name) => {
+                for (var, val) in substitution_map {
+                    if var == var_name {
+                        return Self::Integer(*val);
+                    }
+                }
+                self.clone()
+            }
             Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
             Expression::Add(left, right) => Expression::add(
                 left.substitute(substitution_map),
@@ -130,10 +86,7 @@ impl Expression {
 
     fn as_integer(&self) -> Option<isize> {
         match self {
-            Expression::Atom(atom) => match atom {
-                Atom::Integer(value) => Some(*value),
-                _ => None,
-            },
+            Expression::Integer(value) => Some(*value),
             _ => None,
         }
     }
@@ -141,12 +94,7 @@ impl Expression {
     fn long_form_negation(&self) -> Option<String> {
         match self {
             Expression::Neg(expr) => match &**expr {
-                Expression::Atom(atom) => match atom {
-                    Atom::Variable(var_name) => {
-                        return Some(format!(" - {}", var_name).to_string());
-                    }
-                    _ => None,
-                },
+                Expression::Variable(var_name) => Some(format!(" - {}", var_name).to_string()),
                 _ => None,
             },
             _ => None,
@@ -157,7 +105,8 @@ impl Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expression::Atom(atom) => atom.fmt(f),
+            Expression::Variable(var_name) => f.write_str(var_name),
+            Expression::Integer(val) => f.write_str(val.to_string().as_str()),
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
@@ -167,15 +116,11 @@ impl Display for Expression {
                 left.fmt(f)?;
 
                 match &**right {
-                    Expression::Atom(atom) => match atom {
-                        Atom::Integer(val) => {
-                            if val.is_negative() {
-                                return f
-                                    .write_str(format!(" - {})", val.abs().to_string()).as_str());
-                            }
+                    Expression::Integer(val) => {
+                        if val.is_negative() {
+                            return f.write_str(format!(" - {})", val.abs().to_string()).as_str());
                         }
-                        _ => {}
-                    },
+                    }
                     Expression::Neg(expr) => {
                         if let Some(negation_str) = right.long_form_negation() {
                             f.write_str(negation_str.as_str())?;
@@ -207,18 +152,18 @@ impl Display for Expression {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Atom, Expression};
+    use crate::Expression;
 
     fn expr1() -> Expression {
         // 2x + 3y - z
         let (x, y, z) = (
-            Atom::Variable("x"),
-            Atom::Variable("y"),
-            Atom::Variable("z"),
+            Expression::Variable("x"),
+            Expression::Variable("y"),
+            Expression::Variable("z"),
         );
-        let (two, three) = (Atom::Integer(2), Atom::Integer(3));
+        let (two, three) = (Expression::Integer(2), Expression::Integer(3));
 
-        (two * x) + (three * y) - z.to_expr()
+        (two * x) + (three * y) - z
     }
 
     #[test]
@@ -255,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_different_atom_combinations() {
-        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let a = &x + &y;
         let b = x.clone() + y.clone();
         let c = &x + y.clone();
@@ -267,28 +212,28 @@ mod tests {
 
     #[test]
     fn test_long_form_negation() {
-        assert_eq!(Atom::Integer(1).to_expr().long_form_negation(), None);
+        assert_eq!(Expression::Integer(1).long_form_negation(), None);
         assert_eq!(
-            Expression::neg(Atom::Integer(1).to_expr()).long_form_negation(),
+            Expression::neg(Expression::Integer(1)).long_form_negation(),
             None
         );
         assert_eq!(
-            Expression::neg(Atom::Variable("x").to_expr()).long_form_negation(),
+            Expression::neg(Expression::Variable("x")).long_form_negation(),
             Some(" - x".to_string())
         );
         assert_eq!(
-            Expression::neg(Atom::Variable("x").to_expr()).to_string(),
+            Expression::neg(Expression::Variable("x")).to_string(),
             "-x".to_string()
         );
     }
 
     #[test]
     fn test_negation_display() {
-        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let z = &x - &y;
         assert_eq!(z.to_string(), "(x - y)");
 
-        let z = x.to_expr() - (y * Atom::Integer(2));
+        let z = x - (y * Expression::Integer(2));
         assert_eq!(z.to_string(), "(x - (y * 2))");
     }
 }
