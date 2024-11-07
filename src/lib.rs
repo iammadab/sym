@@ -95,13 +95,11 @@ enum Expression {
 
 impl Expression {
     fn neg(expression: Self) -> Self {
-        match expression {
-            Expression::Atom(ref atom) => match atom {
-                Atom::Integer(value) => Atom::Integer(-1 * value).into(),
-                _ => Expression::Neg(Box::new(expression)),
-            },
-            _ => Expression::Neg(Box::new(expression)),
+        if let Some(val) = expression.as_integer() {
+            return Atom::Integer(-1 * val).into();
         }
+
+        Expression::Neg(Box::new(expression))
     }
 
     fn add(left: Self, right: Self) -> Self {
@@ -137,6 +135,16 @@ impl Expression {
                 left.substitute(substitution_map),
                 right.substitute(substitution_map),
             ),
+        }
+    }
+
+    fn as_integer(&self) -> Option<isize> {
+        match self {
+            Expression::Atom(atom) => match atom {
+                Atom::Integer(value) => Some(*value),
+                _ => None,
+            },
+            _ => None,
         }
     }
 }
