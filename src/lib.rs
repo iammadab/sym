@@ -1,7 +1,8 @@
-use std::fmt::{Display, Formatter, Write};
-use std::ops::{Add, Mul, Sub};
+mod airth_macros;
 
-#[derive(Clone, Debug)]
+use std::fmt::{Display, Formatter, Write};
+
+#[derive(Clone, Debug, PartialEq)]
 enum Atom {
     Variable(&'static str),
     Integer(isize),
@@ -35,6 +36,10 @@ impl Atom {
             Atom::Integer(_) => self.clone(),
         }
     }
+
+    fn to_expr(&self) -> Expression {
+        self.into()
+    }
 }
 
 impl Display for Atom {
@@ -58,34 +63,7 @@ impl From<&Atom> for Expression {
     }
 }
 
-impl Add for &Atom {
-    type Output = Expression;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Expression::Add(Box::new(self.into()), Box::new(rhs.into()))
-    }
-}
-
-impl Sub for &Atom {
-    type Output = Expression;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Expression::Add(
-            Box::new(self.into()),
-            Box::new(Expression::Neg(Box::new(rhs.into()))),
-        )
-    }
-}
-
-impl Mul for &Atom {
-    type Output = Expression;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Expression::Mul(Box::new(self.into()), Box::new(rhs.into()))
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Expression {
     Atom(Atom),
     Neg(Box<Expression>),
@@ -187,60 +165,6 @@ impl Display for Expression {
     }
 }
 
-impl Add for &Expression {
-    type Output = Expression;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
-    }
-}
-
-impl Add<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn add(self, rhs: &Atom) -> Self::Output {
-        Expression::Add(Box::new(self.clone()), Box::new(rhs.into()))
-    }
-}
-
-impl Sub for &Expression {
-    type Output = Expression;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Expression::Add(
-            Box::new(self.clone()),
-            Box::new(Expression::Neg(Box::new(rhs.clone()))),
-        )
-    }
-}
-
-impl Sub<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn sub(self, rhs: &Atom) -> Self::Output {
-        Expression::Add(
-            Box::new(self.clone()),
-            Box::new(Expression::Neg(Box::new(rhs.into()))),
-        )
-    }
-}
-
-impl Mul for &Expression {
-    type Output = Expression;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
-    }
-}
-
-impl Mul<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn mul(self, rhs: &Atom) -> Self::Output {
-        Expression::Mul(Box::new(self.clone()), Box::new(rhs.into()))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::{Atom, Expression};
@@ -254,8 +178,7 @@ mod tests {
         );
         let (two, three) = (Atom::Integer(2), Atom::Integer(3));
 
-        // TODO: implement consuming arithmetic
-        &(&(&two * &x) + &(&three * &y)) - &z
+        (two * x) + (three * y) - z.to_expr()
     }
 
     #[test]
@@ -288,5 +211,17 @@ mod tests {
         // x = 4
         let expr = expr.substitute(&[("x", 4)]);
         assert_eq!(expr.to_string(), "15");
+    }
+
+    #[test]
+    fn test_different_atom_combinations() {
+        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        let a = &x + &y;
+        let b = x.clone() + y.clone();
+        let c = &x + y.clone();
+        let d = x + &y;
+        assert_eq!(a, b);
+        assert_eq!(b, c);
+        assert_eq!(c, d);
     }
 }
