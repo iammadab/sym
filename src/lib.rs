@@ -34,7 +34,7 @@ impl From<&Atom> for Expression {
     }
 }
 
-impl Add for Atom {
+impl Add for &Atom {
     type Output = Expression;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -42,7 +42,7 @@ impl Add for Atom {
     }
 }
 
-impl Sub for Atom {
+impl Sub for &Atom {
     type Output = Expression;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -53,7 +53,7 @@ impl Sub for Atom {
     }
 }
 
-impl Mul for Atom {
+impl Mul for &Atom {
     type Output = Expression;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -84,54 +84,57 @@ impl Expression {
     }
 }
 
-impl Add for Expression {
+impl Add for &Expression {
     type Output = Expression;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Expression::Add(Box::new(self), Box::new(rhs))
+        Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
     }
 }
 
-impl Add<Atom> for Expression {
+impl Add<&Atom> for &Expression {
     type Output = Expression;
 
-    fn add(self, rhs: Atom) -> Self::Output {
-        Expression::Add(Box::new(self), Box::new(rhs.into()))
+    fn add(self, rhs: &Atom) -> Self::Output {
+        Expression::Add(Box::new(self.clone()), Box::new(rhs.into()))
     }
 }
 
-impl Sub for Expression {
+impl Sub for &Expression {
     type Output = Expression;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Expression::Add(Box::new(self), Box::new(Expression::Neg(Box::new(rhs))))
+        Expression::Add(
+            Box::new(self.clone()),
+            Box::new(Expression::Neg(Box::new(rhs.clone()))),
+        )
     }
 }
 
-impl Sub<Atom> for Expression {
+impl Sub<&Atom> for &Expression {
     type Output = Expression;
 
-    fn sub(self, rhs: Atom) -> Self::Output {
+    fn sub(self, rhs: &Atom) -> Self::Output {
         Expression::Add(
-            Box::new(self),
+            Box::new(self.clone()),
             Box::new(Expression::Neg(Box::new(rhs.into()))),
         )
     }
 }
 
-impl Mul for Expression {
+impl Mul for &Expression {
     type Output = Expression;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Expression::Mul(Box::new(self), Box::new(rhs))
+        Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
     }
 }
 
-impl Mul<Atom> for Expression {
+impl Mul<&Atom> for &Expression {
     type Output = Expression;
 
-    fn mul(self, rhs: Atom) -> Self::Output {
-        Expression::Mul(Box::new(self), Box::new(rhs.into()))
+    fn mul(self, rhs: &Atom) -> Self::Output {
+        Expression::Mul(Box::new(self.clone()), Box::new(rhs.into()))
     }
 }
 
@@ -142,9 +145,9 @@ mod tests {
     #[test]
     fn fake_test() {
         let x = Atom::Variable("x");
-        let y = x + Atom::Integer(1);
-        let z = y * Atom::Integer(2);
-        let m = z - Atom::Integer(3);
+        let y = &x + &Atom::Integer(1);
+        let z = &y * &Atom::Integer(2);
+        let m = &z - &Atom::Integer(3);
         dbg!(m);
     }
 }
