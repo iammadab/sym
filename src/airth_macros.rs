@@ -1,28 +1,28 @@
 use crate::Expression;
 use std::ops::{Add, Mul, Neg, Sub};
 #[macro_export]
-macro_rules! impl_atom_add {
-    ($lhs:ty, $rhs:ty, $conversion:ident) => {
+macro_rules! impl_add {
+    ($lhs:ty, $rhs:ty) => {
         impl Add<$rhs> for $lhs {
             type Output = Expression;
 
             fn add(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(Box::new(self.$conversion()), Box::new(rhs.$conversion()))
+                Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
             }
         }
     };
 }
 
 #[macro_export]
-macro_rules! impl_atom_sub {
-    ($lhs:ty, $rhs:ty, $conversion:ident) => {
+macro_rules! impl_sub {
+    ($lhs:ty, $rhs:ty) => {
         impl Sub<$rhs> for $lhs {
             type Output = Expression;
 
             fn sub(self, rhs: $rhs) -> Self::Output {
                 Expression::Add(
-                    Box::new(self.$conversion()),
-                    Box::new(Expression::Neg(Box::new(rhs.$conversion()))),
+                    Box::new(self.clone()),
+                    Box::new(Expression::Neg(Box::new(rhs.clone()))),
                 )
             }
         }
@@ -30,13 +30,13 @@ macro_rules! impl_atom_sub {
 }
 
 #[macro_export]
-macro_rules! impl_atom_mul {
-    ($lhs:ty, $rhs:ty, $conversion:ident) => {
+macro_rules! impl_mul {
+    ($lhs:ty, $rhs:ty) => {
         impl Mul<$rhs> for $lhs {
             type Output = Expression;
 
             fn mul(self, rhs: $rhs) -> Self::Output {
-                Expression::Mul(Box::new(self.$conversion()), Box::new(rhs.$conversion()))
+                Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
             }
         }
     };
@@ -44,15 +44,15 @@ macro_rules! impl_atom_mul {
 
 #[macro_export]
 macro_rules! impl_type_combination {
-    ($impl_name:ident, $type_name:ty, $conversion:ident) => {
-        $impl_name!($type_name, $type_name, $conversion);
-        $impl_name!(&$type_name, &$type_name, $conversion);
-        $impl_name!($type_name, &$type_name, $conversion);
-        $impl_name!(&$type_name, $type_name, $conversion);
+    ($impl_name:ident, $type_name:ty) => {
+        $impl_name!($type_name, $type_name);
+        $impl_name!(&$type_name, &$type_name);
+        $impl_name!($type_name, &$type_name);
+        $impl_name!(&$type_name, $type_name);
     };
 }
 
 // Expression arithmetic operations
-impl_type_combination!(impl_atom_add, Expression, clone);
-impl_type_combination!(impl_atom_sub, Expression, clone);
-impl_type_combination!(impl_atom_mul, Expression, clone);
+impl_type_combination!(impl_add, Expression);
+impl_type_combination!(impl_sub, Expression);
+impl_type_combination!(impl_mul, Expression);
