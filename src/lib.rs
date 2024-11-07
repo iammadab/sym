@@ -265,11 +265,28 @@ mod tests {
 
     #[test]
     fn test_expression_evaluation() {
-        todo!()
+        // x = 2, y = 3, z = 4
+        // 2.2 + 3.3 - 4
+        // 4 + 9 - 4 = 9
+        assert_eq!(expr1().evaluate(&[("x", 2), ("y", 3), ("z", 4)]), 9);
     }
 
     #[test]
     fn test_expression_substitution() {
-        todo!()
+        // z = 2
+        let expr = expr1().substitute(&[("z", 2)]);
+        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) + -2)");
+
+        // m = 2 <- no-op
+        let expr = expr.substitute(&[("m", 3)]);
+        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) + -2)");
+
+        // y = 3
+        let expr = expr.substitute(&[("y", 3)]);
+        assert_eq!(expr.to_string(), "(((2 * x) + 9) + -2)");
+
+        // x = 4
+        let expr = expr.substitute(&[("x", 4)]);
+        assert_eq!(expr.to_string(), "15");
     }
 }
