@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, Write};
 use std::ops::{Add, Mul, Sub};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Atom {
     Variable(&'static str),
     Integer(isize),
@@ -66,6 +66,30 @@ impl Add for &Atom {
     }
 }
 
+impl Add for Atom {
+    type Output = Expression;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Expression::Add(Box::new(self.into()), Box::new(rhs.into()))
+    }
+}
+
+impl Add<&Atom> for Atom {
+    type Output = Expression;
+
+    fn add(self, rhs: &Atom) -> Self::Output {
+        Expression::Add(Box::new(self.into()), Box::new(rhs.into()))
+    }
+}
+
+impl Add<Atom> for &Atom {
+    type Output = Expression;
+
+    fn add(self, rhs: Atom) -> Self::Output {
+        Expression::Add(Box::new(self.into()), Box::new(rhs.into()))
+    }
+}
+
 impl Sub for &Atom {
     type Output = Expression;
 
@@ -85,7 +109,7 @@ impl Mul for &Atom {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Expression {
     Atom(Atom),
     Neg(Box<Expression>),
@@ -288,5 +312,17 @@ mod tests {
         // x = 4
         let expr = expr.substitute(&[("x", 4)]);
         assert_eq!(expr.to_string(), "15");
+    }
+
+    #[test]
+    fn test_different_atom_combinations() {
+        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        let a = &x + &y;
+        let b = x.clone() + y.clone();
+        let c = &x + y.clone();
+        let d = x + &y;
+        assert_eq!(a, b);
+        assert_eq!(b, c);
+        assert_eq!(c, d);
     }
 }
