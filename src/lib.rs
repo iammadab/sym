@@ -21,6 +21,20 @@ impl Atom {
             }
         }
     }
+
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Atom {
+        match self {
+            Atom::Variable(variable_name) => {
+                for (var, val) in substitution_map {
+                    if var == variable_name {
+                        return Atom::Integer(*val);
+                    }
+                }
+                self.clone()
+            }
+            Atom::Integer(_) => self.clone(),
+        }
+    }
 }
 
 impl Display for Atom {
@@ -90,6 +104,21 @@ impl Expression {
             Expression::Mul(left, right) => {
                 left.evaluate(substitution_map) * right.evaluate(substitution_map)
             }
+        }
+    }
+
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Expression {
+        match self {
+            Expression::Atom(atom) => atom.substitute(substitution_map).into(),
+            Expression::Neg(expr) => Expression::Neg(Box::new(expr.substitute(substitution_map))),
+            Expression::Add(left, right) => Expression::Add(
+                Box::new(left.substitute(substitution_map)),
+                Box::new(right.substitute(substitution_map)),
+            ),
+            Expression::Mul(left, right) => Expression::Mul(
+                Box::new(left.substitute(substitution_map)),
+                Box::new(right.substitute(substitution_map)),
+            ),
         }
     }
 }
