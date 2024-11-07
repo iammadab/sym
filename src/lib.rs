@@ -161,30 +161,11 @@ impl Display for Expression {
         }
     }
 }
-impl Add for &Expression {
-    type Output = Expression;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
-    }
-}
-
 impl Add<&Atom> for &Expression {
     type Output = Expression;
 
     fn add(self, rhs: &Atom) -> Self::Output {
         Expression::Add(Box::new(self.clone()), Box::new(rhs.into()))
-    }
-}
-
-impl Sub for &Expression {
-    type Output = Expression;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Expression::Add(
-            Box::new(self.clone()),
-            Box::new(Expression::Neg(Box::new(rhs.clone()))),
-        )
     }
 }
 
@@ -196,14 +177,6 @@ impl Sub<&Atom> for &Expression {
             Box::new(self.clone()),
             Box::new(Expression::Neg(Box::new(rhs.into()))),
         )
-    }
-}
-
-impl Mul for &Expression {
-    type Output = Expression;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
     }
 }
 
@@ -229,6 +202,7 @@ mod tests {
         let (two, three) = (Atom::Integer(2), Atom::Integer(3));
 
         // TODO: implement consuming arithmetic
+        // (two * x) + (three * y) - z;
         &(&(&two * &x) + &(&three * &y)) - &z
     }
 
