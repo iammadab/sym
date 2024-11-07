@@ -27,7 +27,7 @@ impl Display for Atom {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Atom::Variable(var_name) => f.write_str(var_name),
-            Atom::Integer(val) => f.write_str(val.to_string().as_str())
+            Atom::Integer(val) => f.write_str(val.to_string().as_str()),
         }
     }
 }
@@ -101,16 +101,20 @@ impl Display for Expression {
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
-            },
+            }
             Expression::Add(left, right) => {
+                f.write_str("(")?;
                 left.fmt(f)?;
                 f.write_str(" + ")?;
-                right.fmt(f)
-            },
+                right.fmt(f)?;
+                f.write_str(")")
+            }
             Expression::Mul(left, right) => {
+                f.write_str("(")?;
                 left.fmt(f)?;
                 f.write_str(" * ")?;
-                right.fmt(f)
+                right.fmt(f)?;
+                f.write_str(")")
             }
         }
     }
