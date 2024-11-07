@@ -21,6 +21,20 @@ impl Atom {
             }
         }
     }
+
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
+        match self {
+            Atom::Variable(variable_name) => {
+                for (var, val) in substitution_map {
+                    if var == variable_name {
+                        return Atom::Integer(*val);
+                    }
+                }
+                self.clone()
+            }
+            Atom::Integer(_) => self.clone(),
+        }
+    }
 }
 
 impl Display for Atom {
@@ -80,6 +94,34 @@ enum Expression {
 }
 
 impl Expression {
+    fn neg(expression: Self) -> Self {
+        if let Some(val) = expression.as_integer() {
+            return Atom::Integer(-1 * val).into();
+        }
+
+        Expression::Neg(Box::new(expression))
+    }
+
+    fn add(left: Self, right: Self) -> Self {
+        if let Some(left_val) = left.as_integer() {
+            if let Some(right_val) = right.as_integer() {
+                return Atom::Integer(left_val + right_val).into();
+            }
+        }
+
+        Expression::Add(Box::new(left), Box::new(right))
+    }
+
+    fn mul(left: Self, right: Self) -> Self {
+        if let Some(left_val) = left.as_integer() {
+            if let Some(right_val) = right.as_integer() {
+                return Atom::Integer(left_val * right_val).into();
+            }
+        }
+
+        Expression::Mul(Box::new(left), Box::new(right))
+    }
+
     fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
         match self {
             Expression::Atom(atom) => atom.evaluate(substitution_map),
@@ -90,6 +132,31 @@ impl Expression {
             Expression::Mul(left, right) => {
                 left.evaluate(substitution_map) * right.evaluate(substitution_map)
             }
+        }
+    }
+
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
+        match self {
+            Expression::Atom(atom) => atom.substitute(substitution_map).into(),
+            Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
+            Expression::Add(left, right) => Expression::add(
+                left.substitute(substitution_map),
+                right.substitute(substitution_map),
+            ),
+            Expression::Mul(left, right) => Expression::mul(
+                left.substitute(substitution_map),
+                right.substitute(substitution_map),
+            ),
+        }
+    }
+
+    fn as_integer(&self) -> Option<isize> {
+        match self {
+            Expression::Atom(atom) => match atom {
+                Atom::Integer(value) => Some(*value),
+                _ => None,
+            },
+            _ => None,
         }
     }
 }
@@ -180,12 +247,13 @@ mod tests {
 
     #[test]
     fn fake_test() {
-        let x = Atom::Variable("x");
-        let y = &x + &Atom::Integer(1);
-        let z = &y * &Atom::Integer(2);
-        let m = &z - &Atom::Integer(3);
-        // dbg!(m);
-
-        println!("{}", m);
+        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        // 2x + 3y
+        let expr = &(&x * &Atom::Integer(2)) + &(&y * &Atom::Integer(3));
+        println!("{}", expr);
+        let expr = expr.substitute(&[("x", 5)]);
+        println!("{}", expr);
+        let expr = expr.substitute(&[("y", 5)]);
+        println!("{}", expr);
     }
 }
