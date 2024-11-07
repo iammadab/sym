@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_expression_creation() {
-        assert_eq!(expr1().to_string(), "(((2 * x) + (3 * y)) + -z)");
+        assert_eq!(expr1().to_string(), "(((2 * x) + (3 * y)) - z)");
     }
 
     #[test]
