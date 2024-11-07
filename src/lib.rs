@@ -22,7 +22,7 @@ impl Atom {
         }
     }
 
-    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Atom {
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Atom::Variable(variable_name) => {
                 for (var, val) in substitution_map {
@@ -94,6 +94,18 @@ enum Expression {
 }
 
 impl Expression {
+    fn neg(expression: Self) -> Self {
+        Expression::Neg(Box::new(expression))
+    }
+
+    fn add(left: Self, right: Self) -> Self {
+        Expression::Add(Box::new(left), Box::new(right))
+    }
+
+    fn mul(left: Self, right: Self) -> Self {
+        Expression::Mul(Box::new(left), Box::new(right))
+    }
+
     fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
         match self {
             Expression::Atom(atom) => atom.evaluate(substitution_map),
@@ -107,7 +119,7 @@ impl Expression {
         }
     }
 
-    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Expression {
+    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Expression::Atom(atom) => atom.substitute(substitution_map).into(),
             Expression::Neg(expr) => Expression::Neg(Box::new(expr.substitute(substitution_map))),
