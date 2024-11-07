@@ -137,6 +137,21 @@ impl Expression {
             _ => None,
         }
     }
+
+    fn long_form_negation(&self) -> Option<String> {
+        match self {
+            Expression::Neg(expr) => match &**expr {
+                Expression::Atom(atom) => match atom {
+                    Atom::Variable(var_name) => {
+                        return Some(format!(" - {}", var_name).to_string());
+                    }
+                    _ => None,
+                },
+                _ => None,
+            },
+            _ => None,
+        }
+    }
 }
 
 impl Display for Expression {
@@ -150,6 +165,31 @@ impl Display for Expression {
             Expression::Add(left, right) => {
                 f.write_str("(")?;
                 left.fmt(f)?;
+
+                match &**right {
+                    Expression::Atom(atom) => match atom {
+                        Atom::Integer(val) => {
+                            if val.is_negative() {
+                                return f
+                                    .write_str(format!(" - {})", val.abs().to_string()).as_str());
+                            }
+                        }
+                        _ => {}
+                    },
+                    Expression::Neg(expr) => {
+                        if let Some(negation_str) = right.long_form_negation() {
+                            f.write_str(negation_str.as_str())?;
+                            return f.write_str(")");
+                        }
+
+                        // for negated expressions that are not variables or integers
+                        f.write_str(" - ")?;
+                        expr.fmt(f)?;
+                        return f.write_str(")");
+                    }
+                    _ => {}
+                }
+
                 f.write_str(" + ")?;
                 right.fmt(f)?;
                 f.write_str(")")
@@ -198,15 +238,15 @@ mod tests {
     fn test_expression_substitution() {
         // z = 2
         let expr = expr1().substitute(&[("z", 2)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) + -2)");
+        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) - 2)");
 
         // m = 2 <- no-op
         let expr = expr.substitute(&[("m", 3)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) + -2)");
+        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) - 2)");
 
         // y = 3
         let expr = expr.substitute(&[("y", 3)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + 9) + -2)");
+        assert_eq!(expr.to_string(), "(((2 * x) + 9) - 2)");
 
         // x = 4
         let expr = expr.substitute(&[("x", 4)]);
@@ -223,5 +263,32 @@ mod tests {
         assert_eq!(a, b);
         assert_eq!(b, c);
         assert_eq!(c, d);
+    }
+
+    #[test]
+    fn test_long_form_negation() {
+        assert_eq!(Atom::Integer(1).to_expr().long_form_negation(), None);
+        assert_eq!(
+            Expression::neg(Atom::Integer(1).to_expr()).long_form_negation(),
+            None
+        );
+        assert_eq!(
+            Expression::neg(Atom::Variable("x").to_expr()).long_form_negation(),
+            Some(" - x".to_string())
+        );
+        assert_eq!(
+            Expression::neg(Atom::Variable("x").to_expr()).to_string(),
+            "-x".to_string()
+        );
+    }
+
+    #[test]
+    fn test_negation_display() {
+        let (x, y) = (Atom::Variable("x"), Atom::Variable("y"));
+        let z = &x - &y;
+        assert_eq!(z.to_string(), "(x - y)");
+
+        let z = x.to_expr() - (y * Atom::Integer(2));
+        assert_eq!(z.to_string(), "(x - (y * 2))");
     }
 }
