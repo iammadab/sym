@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter, Write};
 use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,15 @@ impl Atom {
                 }
                 panic!("didn't assign a concrete value to all variables");
             }
+        }
+    }
+}
+
+impl Display for Atom {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Atom::Variable(var_name) => f.write_str(var_name),
+            Atom::Integer(val) => f.write_str(val.to_string().as_str()),
         }
     }
 }
@@ -79,6 +89,32 @@ impl Expression {
             }
             Expression::Mul(left, right) => {
                 left.evaluate(substitution_map) * right.evaluate(substitution_map)
+            }
+        }
+    }
+}
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expression::Atom(atom) => atom.fmt(f),
+            Expression::Neg(expr) => {
+                f.write_str("-")?;
+                expr.fmt(f)
+            }
+            Expression::Add(left, right) => {
+                f.write_str("(")?;
+                left.fmt(f)?;
+                f.write_str(" + ")?;
+                right.fmt(f)?;
+                f.write_str(")")
+            }
+            Expression::Mul(left, right) => {
+                f.write_str("(")?;
+                left.fmt(f)?;
+                f.write_str(" * ")?;
+                right.fmt(f)?;
+                f.write_str(")")
             }
         }
     }
@@ -148,6 +184,8 @@ mod tests {
         let y = &x + &Atom::Integer(1);
         let z = &y * &Atom::Integer(2);
         let m = &z - &Atom::Integer(3);
-        dbg!(m);
+        // dbg!(m);
+
+        println!("{}", m);
     }
 }
