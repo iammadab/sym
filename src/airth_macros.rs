@@ -53,12 +53,12 @@ macro_rules! impl_type_combination {
     };
 }
 
-/// Atom arithmetic operations
+// Atom arithmetic operations
 impl_type_combination!(impl_atom_add, Atom, into);
 impl_type_combination!(impl_atom_sub, Atom, into);
 impl_type_combination!(impl_atom_mul, Atom, into);
 
-/// Expression arithmetic operations
+// Expression arithmetic operations
 impl_type_combination!(impl_atom_add, Expression, clone);
 impl_type_combination!(impl_atom_sub, Expression, clone);
 impl_type_combination!(impl_atom_mul, Expression, clone);

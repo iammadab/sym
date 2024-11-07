@@ -1,7 +1,6 @@
 mod airth_macros;
 
 use std::fmt::{Display, Formatter, Write};
-use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Debug, PartialEq)]
 enum Atom {
