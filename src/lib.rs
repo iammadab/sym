@@ -103,10 +103,22 @@ impl Expression {
     }
 
     fn add(left: Self, right: Self) -> Self {
+        if let Some(left_val) = left.as_integer() {
+            if let Some(right_val) = right.as_integer() {
+                return Atom::Integer(left_val + right_val).into();
+            }
+        }
+
         Expression::Add(Box::new(left), Box::new(right))
     }
 
     fn mul(left: Self, right: Self) -> Self {
+        if let Some(left_val) = left.as_integer() {
+            if let Some(right_val) = right.as_integer() {
+                return Atom::Integer(left_val * right_val).into();
+            }
+        }
+
         Expression::Mul(Box::new(left), Box::new(right))
     }
 
@@ -240,6 +252,8 @@ mod tests {
         let expr = &(&x * &Atom::Integer(2)) + &(&y * &Atom::Integer(3));
         println!("{}", expr);
         let expr = expr.substitute(&[("x", 5)]);
+        println!("{}", expr);
+        let expr = expr.substitute(&[("y", 5)]);
         println!("{}", expr);
     }
 }
