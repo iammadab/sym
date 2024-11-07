@@ -37,6 +37,10 @@ impl Atom {
             Atom::Integer(_) => self.clone(),
         }
     }
+
+    fn to_expr(&self) -> Expression {
+        self.into()
+    }
 }
 
 impl Display for Atom {
@@ -161,32 +165,6 @@ impl Display for Expression {
         }
     }
 }
-impl Add<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn add(self, rhs: &Atom) -> Self::Output {
-        Expression::Add(Box::new(self.clone()), Box::new(rhs.into()))
-    }
-}
-
-impl Sub<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn sub(self, rhs: &Atom) -> Self::Output {
-        Expression::Add(
-            Box::new(self.clone()),
-            Box::new(Expression::Neg(Box::new(rhs.into()))),
-        )
-    }
-}
-
-impl Mul<&Atom> for &Expression {
-    type Output = Expression;
-
-    fn mul(self, rhs: &Atom) -> Self::Output {
-        Expression::Mul(Box::new(self.clone()), Box::new(rhs.into()))
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -201,9 +179,7 @@ mod tests {
         );
         let (two, three) = (Atom::Integer(2), Atom::Integer(3));
 
-        // TODO: implement consuming arithmetic
-        // (two * x) + (three * y) - z;
-        &(&(&two * &x) + &(&three * &y)) - &z
+        (two * x) + (three * y) - z.to_expr()
     }
 
     #[test]
