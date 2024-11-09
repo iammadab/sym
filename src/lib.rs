@@ -15,22 +15,6 @@ enum Expression {
 }
 
 impl Expression {
-    fn neg(expression: Self) -> Self {
-        Expression::Neg(Box::new(expression))
-    }
-
-    fn inv(expression: Self) -> Self {
-        Expression::Inv(Box::new(expression))
-    }
-
-    fn add(left: Self, right: Self) -> Self {
-        Expression::Add(vec![left, right])
-    }
-
-    fn mul(left: Self, right: Self) -> Self {
-        Expression::Mul(vec![left, right])
-    }
-
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Expression::Integer(_) => self.clone(),
