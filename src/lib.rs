@@ -40,27 +40,6 @@ impl Expression {
         Expression::Mul(Box::new(left), Box::new(right))
     }
 
-    fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
-        match self {
-            Expression::Integer(val) => *val,
-            Expression::Variable(var_name) => {
-                for (var, val) in substitution_map {
-                    if var == var_name {
-                        return *val;
-                    }
-                }
-                panic!("didn't assign a concrete value to all variables");
-            }
-            Expression::Neg(expr) => -1 * expr.evaluate(substitution_map),
-            Expression::Add(left, right) => {
-                left.evaluate(substitution_map) + right.evaluate(substitution_map)
-            }
-            Expression::Mul(left, right) => {
-                left.evaluate(substitution_map) * right.evaluate(substitution_map)
-            }
-        }
-    }
-
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Expression::Integer(_) => self.clone(),
@@ -176,7 +155,13 @@ mod tests {
         // x = 2, y = 3, z = 4
         // 2.2 + 3.3 - 4
         // 4 + 9 - 4 = 9
-        assert_eq!(expr1().evaluate(&[("x", 2), ("y", 3), ("z", 4)]), 9);
+        assert_eq!(
+            expr1()
+                .substitute(&[("x", 2), ("y", 3), ("z", 4)])
+                .as_integer()
+                .unwrap(),
+            9
+        );
     }
 
     #[test]
