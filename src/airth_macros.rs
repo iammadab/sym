@@ -7,7 +7,7 @@ macro_rules! impl_add {
             type Output = Expression;
 
             fn add(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(vec![self.clone(), rhs.clone()])
+                Expression::Add(vec![self.clone(), rhs.clone()]).simplify()
             }
         }
     };
@@ -21,6 +21,7 @@ macro_rules! impl_sub {
 
             fn sub(self, rhs: $rhs) -> Self::Output {
                 Expression::Add(vec![self.clone(), Expression::Neg(Box::new(rhs.clone()))])
+                    .simplify()
             }
         }
     };
@@ -33,7 +34,7 @@ macro_rules! impl_mul {
             type Output = Expression;
 
             fn mul(self, rhs: $rhs) -> Self::Output {
-                Expression::Mul(vec![self.clone(), rhs.clone()])
+                Expression::Mul(vec![self.clone(), rhs.clone()]).simplify()
             }
         }
     };
@@ -47,6 +48,7 @@ macro_rules! impl_div {
 
             fn div(self, rhs: $rhs) -> Self::Output {
                 Expression::Mul(vec![self.clone(), Expression::Inv(Box::new(rhs.clone()))])
+                    .simplify()
             }
         }
     };
