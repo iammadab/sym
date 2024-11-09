@@ -95,6 +95,7 @@ impl Display for Expression {
                                 f.write_str(format!(" - {}", val.abs().to_string()).as_str())?;
                                 continue;
                             }
+                            f.write_str(format!(" + {}", expr.to_string()).as_str())?;
                         }
                         Expression::Neg(expr) => {
                             f.write_str(format!(" - {}", expr.to_string()).as_str())?;
