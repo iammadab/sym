@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_expression_creation() {
-        assert_eq!(expr1().to_string(), "((2x + 3y) - z)");
+        assert_eq!(expr1().to_string(), "(2x + 3y - z)");
     }
 
     #[test]
@@ -176,15 +176,15 @@ mod tests {
     fn test_expression_substitution() {
         // z = 2
         let expr = expr1().substitute(&[("z", 2)]);
-        assert_eq!(expr.to_string(), "((2x + 3y) - 2)");
+        assert_eq!(expr.to_string(), "(2x + 3y - 2)");
 
         // m = 2 <- no-op
         let expr = expr.substitute(&[("m", 3)]);
-        assert_eq!(expr.to_string(), "((2x + 3y) - 2)");
+        assert_eq!(expr.to_string(), "(2x + 3y - 2)");
 
         // y = 3
         let expr = expr.substitute(&[("y", 3)]);
-        assert_eq!(expr.to_string(), "((2x + 9) - 2)");
+        assert_eq!(expr.to_string(), "(2x + 7)");
 
         // x = 4
         let expr = expr.substitute(&[("x", 4)]);
