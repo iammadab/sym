@@ -7,6 +7,7 @@ enum Expression {
     Variable(&'static str),
     Integer(isize),
     Neg(Box<Expression>),
+    Inv(Box<Expression>),
     Add(Box<Expression>, Box<Expression>),
     Mul(Box<Expression>, Box<Expression>),
 }
@@ -18,6 +19,10 @@ impl Expression {
         }
 
         Expression::Neg(Box::new(expression))
+    }
+
+    fn inv(expression: Self) -> Self {
+        Expression::Inv(Box::new(expression))
     }
 
     fn add(left: Self, right: Self) -> Self {
@@ -52,6 +57,7 @@ impl Expression {
                 self.clone()
             }
             Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
+            Expression::Inv(expr) => Expression::inv(expr.substitute(substitution_map)),
             Expression::Add(left, right) => Expression::add(
                 left.substitute(substitution_map),
                 right.substitute(substitution_map),
@@ -89,6 +95,11 @@ impl Display for Expression {
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
+            }
+            Expression::Inv(expr) => {
+                f.write_str("(")?;
+                expr.fmt(f)?;
+                f.write_str(")^-1")
             }
             Expression::Add(left, right) => {
                 f.write_str("(")?;
