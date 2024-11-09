@@ -7,6 +7,7 @@ enum Expression {
     Variable(&'static str),
     Integer(isize),
     Neg(Box<Expression>),
+    Inv(Box<Expression>),
     Add(Box<Expression>, Box<Expression>),
     Mul(Box<Expression>, Box<Expression>),
 }
@@ -18,6 +19,10 @@ impl Expression {
         }
 
         Expression::Neg(Box::new(expression))
+    }
+
+    fn inv(expression: Self) -> Self {
+        Expression::Inv(Box::new(expression))
     }
 
     fn add(left: Self, right: Self) -> Self {
@@ -40,27 +45,6 @@ impl Expression {
         Expression::Mul(Box::new(left), Box::new(right))
     }
 
-    fn evaluate(&self, substitution_map: &[(&'static str, isize)]) -> isize {
-        match self {
-            Expression::Integer(val) => *val,
-            Expression::Variable(var_name) => {
-                for (var, val) in substitution_map {
-                    if var == var_name {
-                        return *val;
-                    }
-                }
-                panic!("didn't assign a concrete value to all variables");
-            }
-            Expression::Neg(expr) => -1 * expr.evaluate(substitution_map),
-            Expression::Add(left, right) => {
-                left.evaluate(substitution_map) + right.evaluate(substitution_map)
-            }
-            Expression::Mul(left, right) => {
-                left.evaluate(substitution_map) * right.evaluate(substitution_map)
-            }
-        }
-    }
-
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
         match self {
             Expression::Integer(_) => self.clone(),
@@ -73,6 +57,7 @@ impl Expression {
                 self.clone()
             }
             Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
+            Expression::Inv(expr) => Expression::inv(expr.substitute(substitution_map)),
             Expression::Add(left, right) => Expression::add(
                 left.substitute(substitution_map),
                 right.substitute(substitution_map),
@@ -110,6 +95,11 @@ impl Display for Expression {
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
+            }
+            Expression::Inv(expr) => {
+                f.write_str("(")?;
+                expr.fmt(f)?;
+                f.write_str(")^-1")
             }
             Expression::Add(left, right) => {
                 f.write_str("(")?;
@@ -176,7 +166,13 @@ mod tests {
         // x = 2, y = 3, z = 4
         // 2.2 + 3.3 - 4
         // 4 + 9 - 4 = 9
-        assert_eq!(expr1().evaluate(&[("x", 2), ("y", 3), ("z", 4)]), 9);
+        assert_eq!(
+            expr1()
+                .substitute(&[("x", 2), ("y", 3), ("z", 4)])
+                .as_integer()
+                .unwrap(),
+            9
+        );
     }
 
     #[test]
@@ -241,5 +237,18 @@ mod tests {
     fn test_basic_simplification_on_init() {
         let a = Expression::Integer(2) + Expression::Integer(3);
         assert_eq!(a.to_string(), "5");
+    }
+
+    #[test]
+    fn test_division() {
+        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let div_expr = x / y;
+        assert_eq!(div_expr.to_string(), "(x * (y)^-1)");
+
+        let div_expr = div_expr.substitute(&[("x", 4)]);
+        assert_eq!(div_expr.to_string(), "(4 * (y)^-1)");
+
+        let div_expr = div_expr.substitute(&[("y", 2)]);
+        assert_eq!(div_expr.to_string(), "(4 * (2)^-1)");
     }
 }

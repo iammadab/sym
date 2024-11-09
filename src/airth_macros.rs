@@ -1,5 +1,5 @@
 use crate::Expression;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 #[macro_export]
 macro_rules! impl_add {
     ($lhs:ty, $rhs:ty) => {
@@ -40,6 +40,19 @@ macro_rules! impl_mul {
 }
 
 #[macro_export]
+macro_rules! impl_div {
+    ($lhs:ty, $rhs:ty) => {
+        impl Div<$rhs> for $lhs {
+            type Output = Expression;
+
+            fn div(self, rhs: $rhs) -> Self::Output {
+                Expression::mul(self.clone(), Expression::inv(rhs.clone()))
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_type_combination {
     ($impl_name:ident, $type_name:ty) => {
         $impl_name!($type_name, $type_name);
@@ -53,3 +66,4 @@ macro_rules! impl_type_combination {
 impl_type_combination!(impl_add, Expression);
 impl_type_combination!(impl_sub, Expression);
 impl_type_combination!(impl_mul, Expression);
+impl_type_combination!(impl_div, Expression);
