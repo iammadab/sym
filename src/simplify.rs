@@ -26,13 +26,20 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     let children = expression.children();
 
     // Substitution Rules
-    // Int(x) + Int(y) = Int(x + y)
+    // 1. (a + b) + (c + d) = a + b + c + d
+    // 2. Int(x) + Int(y) = Int(x + y)
+
+    // check if we have any addition node in the operand
+    // if an addition operand exists, merge the operands children with current node
+    let mut flat_nodes = children.into_iter().flat_map(|child| match child {
+        Expression::Add(_) => child.children(),
+        _ => vec![child],
+    });
 
     // compute the sum of integers in the expression
     // while removing the individual integer terms from the list
     let mut sum = 0;
-    let mut non_integer_nodes = children
-        .into_iter()
+    let mut non_integer_nodes = flat_nodes
         .filter(|child| match child {
             Expression::Integer(val) => {
                 sum += val;
@@ -186,6 +193,7 @@ mod tests {
                     Expression::Integer(2)
                 ]),
             ])
+            .simplify()
             .to_string(),
             "(a + b + c + 6)"
         );
