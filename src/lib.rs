@@ -122,18 +122,16 @@ impl Display for Expression {
                 return f.write_str(")");
             }
             Expression::Mul(exprs) => {
-                f.write_str("(")?;
-
                 let mut expr_iter = exprs.iter();
 
                 // guaranteed that we have at least two expressions in the vec
                 expr_iter.next().unwrap().fmt(f)?;
 
                 for expr in expr_iter {
-                    f.write_str(format!(" * {}", expr.to_string()).as_str())?;
+                    f.write_str(format!("{}", expr.to_string()).as_str())?;
                 }
 
-                f.write_str(")")
+                Ok(())
             }
         }
     }
@@ -157,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_expression_creation() {
-        assert_eq!(expr1().to_string(), "(((2 * x) + (3 * y)) - z)");
+        assert_eq!(expr1().to_string(), "((2x + 3y) - z)");
     }
 
     #[test]
@@ -178,15 +176,15 @@ mod tests {
     fn test_expression_substitution() {
         // z = 2
         let expr = expr1().substitute(&[("z", 2)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) - 2)");
+        assert_eq!(expr.to_string(), "((2x + 3y) - 2)");
 
         // m = 2 <- no-op
         let expr = expr.substitute(&[("m", 3)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + (3 * y)) - 2)");
+        assert_eq!(expr.to_string(), "((2x + 3y) - 2)");
 
         // y = 3
         let expr = expr.substitute(&[("y", 3)]);
-        assert_eq!(expr.to_string(), "(((2 * x) + 9) - 2)");
+        assert_eq!(expr.to_string(), "((2x + 9) - 2)");
 
         // x = 4
         let expr = expr.substitute(&[("x", 4)]);
@@ -212,7 +210,7 @@ mod tests {
         assert_eq!(z.to_string(), "(x - y)");
 
         let z = x - (y * Expression::Integer(2));
-        assert_eq!(z.to_string(), "(x - (2 * y))");
+        assert_eq!(z.to_string(), "(x - 2y)");
     }
 
     #[test]
@@ -225,12 +223,12 @@ mod tests {
     fn test_division() {
         let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let div_expr = x / y;
-        assert_eq!(div_expr.to_string(), "(x * (y)^-1)");
+        assert_eq!(div_expr.to_string(), "x(y)^-1");
 
         let div_expr = div_expr.substitute(&[("x", 4)]);
-        assert_eq!(div_expr.to_string(), "(4 * (y)^-1)");
+        assert_eq!(div_expr.to_string(), "4(y)^-1");
 
         let div_expr = div_expr.substitute(&[("y", 2)]);
-        assert_eq!(div_expr.to_string(), "(4 * (2)^-1)");
+        assert_eq!(div_expr.to_string(), "4(2)^-1");
     }
 }
