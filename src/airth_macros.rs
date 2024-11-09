@@ -7,7 +7,7 @@ macro_rules! impl_add {
             type Output = Expression;
 
             fn add(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(Box::new(self.clone()), Box::new(rhs.clone()))
+                Expression::add(self.clone(), rhs.clone())
             }
         }
     };
@@ -20,10 +20,7 @@ macro_rules! impl_sub {
             type Output = Expression;
 
             fn sub(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(
-                    Box::new(self.clone()),
-                    Box::new(Expression::Neg(Box::new(rhs.clone()))),
-                )
+                Expression::add(self.clone(), Expression::neg(rhs.clone()))
             }
         }
     };
@@ -36,7 +33,7 @@ macro_rules! impl_mul {
             type Output = Expression;
 
             fn mul(self, rhs: $rhs) -> Self::Output {
-                Expression::Mul(Box::new(self.clone()), Box::new(rhs.clone()))
+                Expression::mul(self.clone(), rhs.clone())
             }
         }
     };

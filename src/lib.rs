@@ -236,4 +236,10 @@ mod tests {
         let z = x - (y * Expression::Integer(2));
         assert_eq!(z.to_string(), "(x - (y * 2))");
     }
+
+    #[test]
+    fn test_basic_simplification_on_init() {
+        let a = Expression::Integer(2) + Expression::Integer(3);
+        assert_eq!(a.to_string(), "5");
+    }
 }
