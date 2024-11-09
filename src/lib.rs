@@ -212,7 +212,7 @@ mod tests {
         assert_eq!(z.to_string(), "(x - y)");
 
         let z = x - (y * Expression::Integer(2));
-        assert_eq!(z.to_string(), "(x - (y * 2))");
+        assert_eq!(z.to_string(), "(x - (2 * y))");
     }
 
     #[test]
