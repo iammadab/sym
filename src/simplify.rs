@@ -1,0 +1,191 @@
+use crate::Expression;
+pub(crate) fn simplify_neg(expression: Expression) -> Expression {
+    let child = expression.children_ref()[0];
+
+    // Substitution Rules
+    // 1. Neg(Neg(x)) => x
+    // 2. Neg(integer) => -1 * integer
+    match child {
+        Expression::Neg(inner_expr) => (**inner_expr).clone(),
+        Expression::Integer(val) => Expression::Integer(-1 * val),
+        _ => expression,
+    }
+}
+
+pub(crate) fn simplify_inv(expression: Expression) -> Expression {
+    let child = expression.children_ref()[0];
+
+    // Substitution Rules
+    // Inv(Inv(x)) => x
+    match child {
+        Expression::Inv(inner_expr) => (**inner_expr).clone(),
+        _ => expression,
+    }
+}
+pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    let children = expression.children();
+
+    // Substitution Rules
+    // Int(x) + Int(y) = Int(x + y)
+
+    // compute the sum of integers in the expression
+    // while removing the individual integer terms from the list
+    let mut sum = 0;
+    let mut non_integer_nodes = children
+        .into_iter()
+        .filter(|child| match child {
+            Expression::Integer(val) => {
+                sum += val;
+                false
+            }
+            _ => true,
+        })
+        .collect::<Vec<_>>();
+
+    let sum_node = Expression::Integer(sum);
+
+    if non_integer_nodes.is_empty() {
+        return sum_node;
+    }
+
+    // push the sum node into the node list if it's not zero
+    if sum != 0 {
+        non_integer_nodes.push(sum_node);
+    }
+
+    Expression::Add(non_integer_nodes)
+}
+
+pub(crate) fn simplify_mul(expression: Expression) -> Expression {
+    let children = expression.children();
+
+    // Substitution Rules
+    // Int(x) * Int(y) = Int(x * y)
+
+    // compute the sum of integers in the expression
+    // while removing the individual integer terms from the list
+    let mut prod = 1;
+    let mut non_integer_nodes = children
+        .into_iter()
+        .filter(|child| match child {
+            Expression::Integer(val) => {
+                prod *= val;
+                false
+            }
+            _ => true,
+        })
+        .collect::<Vec<_>>();
+
+    let prod_node = Expression::Integer(prod);
+
+    if non_integer_nodes.is_empty() || prod == 0 {
+        return prod_node;
+    }
+
+    if prod == 1 {
+        return Expression::Mul(non_integer_nodes);
+    }
+
+    // prod_node is a non-zero int
+    Expression::Mul(vec![vec![prod_node], non_integer_nodes].concat())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Expression;
+
+    #[test]
+    fn test_negation_simplification() {
+        // Neg(Neg(a)) = a
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Neg(Box::new(Expression::Variable(
+                "a"
+            )))))
+            .simplify()
+            .to_string(),
+            "a"
+        );
+
+        // Neg(2) = -2
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Integer(2)))
+                .simplify()
+                .to_string(),
+            "-2"
+        );
+
+        // Neg(-2) = 2
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Integer(-2)))
+                .simplify()
+                .to_string(),
+            "2"
+        );
+    }
+
+    #[test]
+    fn test_inverse_simplification() {
+        // Inv(Inv(a)) = a
+        assert_eq!(
+            Expression::Inv(Box::new(Expression::Inv(Box::new(Expression::Variable(
+                "a"
+            )))))
+            .simplify()
+            .to_string(),
+            "a"
+        );
+    }
+
+    #[test]
+    fn test_add_simplification() {
+        // 2 integers
+        assert_eq!(
+            Expression::Add(vec![Expression::Integer(2), Expression::Integer(3)])
+                .simplify()
+                .to_string(),
+            "5"
+        );
+
+        // 4 integers
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(2),
+                Expression::Integer(3),
+                Expression::Integer(4),
+                Expression::Integer(5)
+            ])
+            .simplify()
+            .to_string(),
+            "14"
+        );
+
+        // Integers mixed with variables
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(3),
+                Expression::Variable("x"),
+                Expression::Integer(4),
+                Expression::Variable("y")
+            ])
+            .simplify()
+            .to_string(),
+            "(x + y + 7)"
+        );
+    }
+
+    #[test]
+    fn test_mul_simplification() {
+        // Integers mixed with variables
+        assert_eq!(
+            Expression::Mul(vec![
+                Expression::Integer(3),
+                Expression::Variable("x"),
+                Expression::Integer(4),
+                Expression::Variable("y")
+            ])
+            .simplify()
+            .to_string(),
+            "12xy"
+        );
+    }
+}
