@@ -1,5 +1,4 @@
 use crate::Expression;
-
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     let child = expression.children_ref()[0];
 
@@ -24,16 +23,37 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
     }
 }
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    let children = expression.children();
+
     // Substitution Rules
     // Int(x) + Int(y) = Int(x + y)
 
-    let children = expression.children();
+    // compute the sum of integers in the expression
+    // while removing the individual integer terms from the list
+    let mut sum = 0;
+    let mut non_integer_nodes = children
+        .into_iter()
+        .filter(|child| match child {
+            Expression::Integer(val) => {
+                sum += val;
+                false
+            }
+            _ => true,
+        })
+        .collect::<Vec<_>>();
 
-    // how do I implement this?
-    // the goal is to compress all the integers into 1
-    //
+    let sum_node = Expression::Integer(sum);
 
-    todo!()
+    if non_integer_nodes.is_empty() {
+        return sum_node;
+    }
+
+    // push the sum node into the node list if it's not zero
+    if sum != 0 {
+        non_integer_nodes.push(sum_node);
+    }
+
+    Expression::Add(non_integer_nodes)
 }
 
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
@@ -83,6 +103,43 @@ mod tests {
             .simplify()
             .to_string(),
             "a"
+        );
+    }
+
+    #[test]
+    fn test_add_simplification() {
+        // 2 integers
+        assert_eq!(
+            Expression::Add(vec![Expression::Integer(2), Expression::Integer(3)])
+                .simplify()
+                .to_string(),
+            "5"
+        );
+
+        // 4 integers
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(2),
+                Expression::Integer(3),
+                Expression::Integer(4),
+                Expression::Integer(5)
+            ])
+            .simplify()
+            .to_string(),
+            "14"
+        );
+
+        // Integers mixed with variables
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(3),
+                Expression::Variable("x"),
+                Expression::Integer(4),
+                Expression::Variable("y")
+            ])
+            .simplify()
+            .to_string(),
+            "(x + y + 7)"
         );
     }
 }
