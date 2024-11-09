@@ -1,7 +1,7 @@
 use crate::Expression;
 
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
-    let child = expression.children()[0];
+    let child = expression.children_ref()[0];
 
     // Substitution Rules
     // 1. Neg(Neg(x)) => x
@@ -14,7 +14,7 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_inv(expression: Expression) -> Expression {
-    let child = expression.children()[0];
+    let child = expression.children_ref()[0];
 
     // Substitution Rules
     // Inv(Inv(x)) => x
@@ -24,6 +24,15 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
     }
 }
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    // Substitution Rules
+    // Int(x) + Int(y) = Int(x + y)
+
+    let children = expression.children();
+
+    // how do I implement this?
+    // the goal is to compress all the integers into 1
+    //
+
     todo!()
 }
 

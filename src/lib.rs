@@ -54,7 +54,15 @@ impl Expression {
         }
     }
 
-    fn children(&self) -> Vec<&Self> {
+    fn children(self) -> Vec<Self> {
+        match self {
+            Expression::Neg(expr) | Expression::Inv(expr) => vec![*expr],
+            Expression::Add(exprs) | Expression::Mul(exprs) => exprs,
+            _ => Vec::with_capacity(0),
+        }
+    }
+
+    fn children_ref(&self) -> Vec<&Self> {
         match self {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
             Expression::Add(exprs) | Expression::Mul(exprs) => exprs.iter().collect(),
