@@ -171,6 +171,24 @@ mod tests {
             .to_string(),
             "(x + y + 7)"
         );
+
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Add(vec![Expression::Variable("a"), Expression::Integer(2)]),
+                Expression::Add(vec![
+                    Expression::Integer(-2),
+                    Expression::Variable("b"),
+                    Expression::Integer(2)
+                ]),
+                Expression::Add(vec![
+                    Expression::Integer(2),
+                    Expression::Variable("c"),
+                    Expression::Integer(2)
+                ]),
+            ])
+            .to_string(),
+            "(a + b + c + 6)"
+        );
     }
 
     #[test]
