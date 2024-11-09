@@ -73,8 +73,8 @@ impl Expression {
     fn children(&self) -> Vec<&Self> {
         match self {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
-            // Expression::Add(exprs) | Expression::Mul(exprs) => exprs,
-            _ => todo!(),
+            Expression::Add(exprs) | Expression::Mul(exprs) => exprs.iter().collect(),
+            _ => Vec::with_capacity(0),
         }
     }
 
