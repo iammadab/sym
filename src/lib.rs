@@ -1,6 +1,7 @@
 mod airth_macros;
 mod simplify;
 
+use crate::simplify::{simplify_add, simplify_inv, simplify_mul, simplify_neg};
 use std::fmt::{Display, Formatter, Write};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -55,6 +56,17 @@ impl Expression {
                     .map(|expr| Box::new(expr.substitute(substitution_map)))
                     .collect(),
             ),
+        }
+        .simplify()
+    }
+
+    fn simplify(self) -> Self {
+        match self {
+            Expression::Neg(_) => simplify_neg(self),
+            Expression::Inv(_) => simplify_inv(self),
+            Expression::Add(_) => simplify_add(self),
+            Expression::Mul(_) => simplify_mul(self),
+            _ => self,
         }
     }
 
