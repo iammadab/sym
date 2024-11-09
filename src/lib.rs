@@ -238,4 +238,17 @@ mod tests {
         let a = Expression::Integer(2) + Expression::Integer(3);
         assert_eq!(a.to_string(), "5");
     }
+
+    #[test]
+    fn test_division() {
+        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let div_expr = x / y;
+        assert_eq!(div_expr.to_string(), "(x * (y)^-1)");
+
+        let div_expr = div_expr.substitute(&[("x", 4)]);
+        assert_eq!(div_expr.to_string(), "(4 * (y)^-1)");
+
+        let div_expr = div_expr.substitute(&[("y", 2)]);
+        assert_eq!(div_expr.to_string(), "(4 * (2)^-1)");
+    }
 }
