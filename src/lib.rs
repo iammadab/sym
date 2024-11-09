@@ -88,7 +88,7 @@ impl Display for Expression {
                 expr.fmt(f)
             }
             Expression::Inv(expr) => {
-                f.write_str("(")?;
+                f.write_str("/(")?;
                 expr.fmt(f)?;
                 f.write_str(")^-1")
             }
@@ -223,12 +223,12 @@ mod tests {
     fn test_division() {
         let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let div_expr = x / y;
-        assert_eq!(div_expr.to_string(), "x(y)^-1");
+        assert_eq!(div_expr.to_string(), "x/(y)^-1");
 
         let div_expr = div_expr.substitute(&[("x", 4)]);
-        assert_eq!(div_expr.to_string(), "4(y)^-1");
+        assert_eq!(div_expr.to_string(), "4/(y)^-1");
 
         let div_expr = div_expr.substitute(&[("y", 2)]);
-        assert_eq!(div_expr.to_string(), "4(2)^-1");
+        assert_eq!(div_expr.to_string(), "4/(2)^-1");
     }
 }
