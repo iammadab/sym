@@ -172,4 +172,20 @@ mod tests {
             "(x + y + 7)"
         );
     }
+
+    #[test]
+    fn test_mul_simplification() {
+        // Integers mixed with variables
+        assert_eq!(
+            Expression::Mul(vec![
+                Expression::Integer(3),
+                Expression::Variable("x"),
+                Expression::Integer(4),
+                Expression::Variable("y")
+            ])
+            .simplify()
+            .to_string(),
+            "12xy"
+        );
+    }
 }
