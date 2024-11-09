@@ -10,8 +10,8 @@ enum Expression {
     Integer(isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
-    Add(Vec<Box<Expression>>),
-    Mul(Vec<Box<Expression>>),
+    Add(Vec<Expression>),
+    Mul(Vec<Expression>),
 }
 
 impl Expression {
@@ -24,11 +24,11 @@ impl Expression {
     }
 
     fn add(left: Self, right: Self) -> Self {
-        Expression::Add(vec![Box::new(left), Box::new(right)])
+        Expression::Add(vec![left, right])
     }
 
     fn mul(left: Self, right: Self) -> Self {
-        Expression::Mul(vec![Box::new(left), Box::new(right)])
+        Expression::Mul(vec![left, right])
     }
 
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
@@ -47,13 +47,13 @@ impl Expression {
             Expression::Add(exprs) => Expression::Add(
                 exprs
                     .iter()
-                    .map(|expr| Box::new(expr.substitute(substitution_map)))
+                    .map(|expr| expr.substitute(substitution_map))
                     .collect(),
             ),
             Expression::Mul(exprs) => Expression::Mul(
                 exprs
                     .iter()
-                    .map(|expr| Box::new(expr.substitute(substitution_map)))
+                    .map(|expr| expr.substitute(substitution_map))
                     .collect(),
             ),
         }
@@ -67,6 +67,14 @@ impl Expression {
             Expression::Add(_) => simplify_add(self),
             Expression::Mul(_) => simplify_mul(self),
             _ => self,
+        }
+    }
+
+    fn children(&self) -> Vec<&Self> {
+        match self {
+            Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
+            // Expression::Add(exprs) | Expression::Mul(exprs) => exprs,
+            _ => todo!(),
         }
     }
 
@@ -101,7 +109,7 @@ impl Display for Expression {
                 expr_iter.next().unwrap().fmt(f)?;
 
                 for expr in expr_iter {
-                    match &**expr {
+                    match expr {
                         Expression::Integer(val) => {
                             if val.is_negative() {
                                 f.write_str(format!(" - {}", val.abs().to_string()).as_str())?;
