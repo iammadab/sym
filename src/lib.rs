@@ -42,8 +42,8 @@ impl Expression {
                 }
                 self.clone()
             }
-            Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
-            Expression::Inv(expr) => Expression::inv(expr.substitute(substitution_map)),
+            Expression::Neg(expr) => Expression::Neg(Box::new(expr.substitute(substitution_map))),
+            Expression::Inv(expr) => Expression::Inv(Box::new(expr.substitute(substitution_map))),
             Expression::Add(exprs) => Expression::Add(
                 exprs
                     .iter()
