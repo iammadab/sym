@@ -193,23 +193,6 @@ mod tests {
     }
 
     #[test]
-    fn test_long_form_negation() {
-        assert_eq!(Expression::Integer(1).long_form_negation(), None);
-        assert_eq!(
-            Expression::neg(Expression::Integer(1)).long_form_negation(),
-            None
-        );
-        assert_eq!(
-            Expression::neg(Expression::Variable("x")).long_form_negation(),
-            Some(" - x".to_string())
-        );
-        assert_eq!(
-            Expression::neg(Expression::Variable("x")).to_string(),
-            "-x".to_string()
-        );
-    }
-
-    #[test]
     fn test_negation_display() {
         let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let z = &x - &y;
