@@ -8,8 +8,8 @@ enum Expression {
     Integer(isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
-    Add(Box<Expression>, Box<Expression>),
-    Mul(Box<Expression>, Box<Expression>),
+    Add(Vec<Box<Expression>>),
+    Mul(Vec<Box<Expression>>),
 }
 
 impl Expression {
@@ -32,7 +32,7 @@ impl Expression {
             }
         }
 
-        Expression::Add(Box::new(left), Box::new(right))
+        Expression::Add(vec![Box::new(left), Box::new(right)])
     }
 
     fn mul(left: Self, right: Self) -> Self {
@@ -42,7 +42,7 @@ impl Expression {
             }
         }
 
-        Expression::Mul(Box::new(left), Box::new(right))
+        Expression::Mul(vec![Box::new(left), Box::new(right)])
     }
 
     fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
@@ -58,13 +58,17 @@ impl Expression {
             }
             Expression::Neg(expr) => Expression::neg(expr.substitute(substitution_map)),
             Expression::Inv(expr) => Expression::inv(expr.substitute(substitution_map)),
-            Expression::Add(left, right) => Expression::add(
-                left.substitute(substitution_map),
-                right.substitute(substitution_map),
+            Expression::Add(exprs) => Expression::Add(
+                exprs
+                    .iter()
+                    .map(|expr| Box::new(expr.substitute(substitution_map)))
+                    .collect(),
             ),
-            Expression::Mul(left, right) => Expression::mul(
-                left.substitute(substitution_map),
-                right.substitute(substitution_map),
+            Expression::Mul(exprs) => Expression::Mul(
+                exprs
+                    .iter()
+                    .map(|expr| Box::new(expr.substitute(substitution_map)))
+                    .collect(),
             ),
         }
     }
@@ -101,39 +105,46 @@ impl Display for Expression {
                 expr.fmt(f)?;
                 f.write_str(")^-1")
             }
-            Expression::Add(left, right) => {
+            Expression::Add(exprs) => {
                 f.write_str("(")?;
-                left.fmt(f)?;
 
-                match &**right {
-                    Expression::Integer(val) => {
-                        if val.is_negative() {
-                            return f.write_str(format!(" - {})", val.abs().to_string()).as_str());
+                let mut expr_iter = exprs.iter();
+
+                // guaranteed that we have at least two expressions in the vec
+                expr_iter.next().unwrap().fmt(f)?;
+
+                for expr in expr_iter {
+                    match &**expr {
+                        Expression::Integer(val) => {
+                            if val.is_negative() {
+                                f.write_str(format!(" - {}", val.abs().to_string()).as_str())?;
+                                continue;
+                            }
+                        }
+                        Expression::Neg(expr) => {
+                            f.write_str(format!(" - {}", expr.to_string()).as_str())?;
+                            continue;
+                        }
+                        _ => {
+                            f.write_str(format!(" + {}", expr.to_string()).as_str())?;
                         }
                     }
-                    Expression::Neg(expr) => {
-                        if let Some(negation_str) = right.long_form_negation() {
-                            f.write_str(negation_str.as_str())?;
-                            return f.write_str(")");
-                        }
-
-                        // for negated expressions that are not variables or integers
-                        f.write_str(" - ")?;
-                        expr.fmt(f)?;
-                        return f.write_str(")");
-                    }
-                    _ => {}
                 }
 
-                f.write_str(" + ")?;
-                right.fmt(f)?;
-                f.write_str(")")
+                return f.write_str(")");
             }
-            Expression::Mul(left, right) => {
+            Expression::Mul(exprs) => {
                 f.write_str("(")?;
-                left.fmt(f)?;
-                f.write_str(" * ")?;
-                right.fmt(f)?;
+
+                let mut expr_iter = exprs.iter();
+
+                // guaranteed that we have at least two expressions in the vec
+                expr_iter.next().unwrap().fmt(f)?;
+
+                for expr in expr_iter {
+                    f.write_str(format!(" * {}", expr.to_string()).as_str())?;
+                }
+
                 f.write_str(")")
             }
         }
