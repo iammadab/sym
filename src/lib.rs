@@ -1,4 +1,5 @@
 mod airth_macros;
+mod simplify;
 
 use std::fmt::{Display, Formatter, Write};
 
@@ -14,10 +15,6 @@ enum Expression {
 
 impl Expression {
     fn neg(expression: Self) -> Self {
-        if let Some(val) = expression.as_integer() {
-            return Expression::Integer(-1 * val).into();
-        }
-
         Expression::Neg(Box::new(expression))
     }
 
@@ -26,22 +23,10 @@ impl Expression {
     }
 
     fn add(left: Self, right: Self) -> Self {
-        if let Some(left_val) = left.as_integer() {
-            if let Some(right_val) = right.as_integer() {
-                return Expression::Integer(left_val + right_val).into();
-            }
-        }
-
         Expression::Add(vec![Box::new(left), Box::new(right)])
     }
 
     fn mul(left: Self, right: Self) -> Self {
-        if let Some(left_val) = left.as_integer() {
-            if let Some(right_val) = right.as_integer() {
-                return Expression::Integer(left_val * right_val).into();
-            }
-        }
-
         Expression::Mul(vec![Box::new(left), Box::new(right)])
     }
 
@@ -76,16 +61,6 @@ impl Expression {
     fn as_integer(&self) -> Option<isize> {
         match self {
             Expression::Integer(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    fn long_form_negation(&self) -> Option<String> {
-        match self {
-            Expression::Neg(expr) => match &**expr {
-                Expression::Variable(var_name) => Some(format!(" - {}", var_name).to_string()),
-                _ => None,
-            },
             _ => None,
         }
     }
