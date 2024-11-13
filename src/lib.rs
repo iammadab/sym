@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter, Write};
 
 #[derive(Clone, Debug, PartialEq)]
 enum Expression {
-    Variable(&'static str),
+    Variable(String),
     Integer(isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
@@ -15,7 +15,7 @@ enum Expression {
 }
 
 impl Expression {
-    fn substitute(&self, substitution_map: &[(&'static str, isize)]) -> Self {
+    fn substitute(&self, substitution_map: &[(String, isize)]) -> Self {
         match self {
             Expression::Integer(_) => self.clone(),
             Expression::Variable(var_name) => {
@@ -158,9 +158,9 @@ mod tests {
     fn expr1() -> Expression {
         // 2x + 3y - z
         let (x, y, z) = (
-            Expression::Variable("x"),
-            Expression::Variable("y"),
-            Expression::Variable("z"),
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+            Expression::Variable("z".to_string()),
         );
         let (two, three) = (Expression::Integer(2), Expression::Integer(3));
 
@@ -168,7 +168,7 @@ mod tests {
     }
 
     fn lagrange_expression(interpolating_set: &[usize]) -> Expression {
-        let x = Expression::Variable("x");
+        let x = Expression::Variable("x".to_string());
         let mut terms = vec![];
 
         for val in interpolating_set {
@@ -208,16 +208,23 @@ mod tests {
         // 4 + 9 - 4 = 9
         assert_eq!(
             expr1()
-                .substitute(&[("x", 2), ("y", 3), ("z", 4)])
+                .substitute(&[
+                    ("x".to_string(), 2),
+                    ("y".to_string(), 3),
+                    ("z".to_string(), 4)
+                ])
                 .as_integer()
                 .unwrap(),
             9
         );
 
         // x / y where x = 1 and y = 2
-        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let (x, y) = (
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+        );
         let x_div_y = x / y;
-        let simplified = x_div_y.substitute(&[("x", 1), ("y", 2)]);
+        let simplified = x_div_y.substitute(&[("x".to_string(), 1), ("y".to_string(), 2)]);
         let result = simplified.evaluate();
         assert_eq!(result, 0.5);
     }
@@ -225,25 +232,28 @@ mod tests {
     #[test]
     fn test_expression_substitution() {
         // z = 2
-        let expr = expr1().substitute(&[("z", 2)]);
+        let expr = expr1().substitute(&[("z".to_string(), 2)]);
         assert_eq!(expr.to_string(), "(2x + 3y - 2)");
 
         // m = 2 <- no-op
-        let expr = expr.substitute(&[("m", 3)]);
+        let expr = expr.substitute(&[("m".to_string(), 3)]);
         assert_eq!(expr.to_string(), "(2x + 3y - 2)");
 
         // y = 3
-        let expr = expr.substitute(&[("y", 3)]);
+        let expr = expr.substitute(&[("y".to_string(), 3)]);
         assert_eq!(expr.to_string(), "(2x + 7)");
 
         // x = 4
-        let expr = expr.substitute(&[("x", 4)]);
+        let expr = expr.substitute(&[("x".to_string(), 4)]);
         assert_eq!(expr.to_string(), "15");
     }
 
     #[test]
     fn test_different_atom_combinations() {
-        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let (x, y) = (
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+        );
         let a = &x + &y;
         let b = x.clone() + y.clone();
         let c = &x + y.clone();
@@ -255,7 +265,10 @@ mod tests {
 
     #[test]
     fn test_negation_display() {
-        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let (x, y) = (
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+        );
         let z = &x - &y;
         assert_eq!(z.to_string(), "(x - y)");
 
@@ -271,14 +284,17 @@ mod tests {
 
     #[test]
     fn test_division() {
-        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let (x, y) = (
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+        );
         let div_expr = x / y;
         assert_eq!(div_expr.to_string(), "x/(y)");
 
-        let div_expr = div_expr.substitute(&[("x", 4)]);
+        let div_expr = div_expr.substitute(&[("x".to_string(), 4)]);
         assert_eq!(div_expr.to_string(), "4/(y)");
 
-        let div_expr = div_expr.substitute(&[("y", 2)]);
+        let div_expr = div_expr.substitute(&[("y".to_string(), 2)]);
         assert_eq!(div_expr.to_string(), "4/(2)");
     }
 
