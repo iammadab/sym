@@ -44,6 +44,20 @@ impl Expression {
         .simplify()
     }
 
+    fn evaluate(&self) -> f64 {
+        match self {
+            Expression::Variable(_) => {
+                // variables shouldn't exist on evaluation call, panic
+                panic!("cannot evaluate when free variable exists");
+            }
+            Expression::Integer(val) => *val as f64,
+            Expression::Neg(expr) => expr.evaluate(),
+            Expression::Inv(expr) => 1.0 / expr.evaluate(),
+            Expression::Add(exprs) => exprs.iter().fold(0.0, |acc, expr| acc + expr.evaluate()),
+            Expression::Mul(exprs) => exprs.iter().fold(1.0, |acc, expr| acc * expr.evaluate()),
+        }
+    }
+
     fn simplify(self) -> Self {
         match self {
             Expression::Neg(_) => simplify_neg(self),
@@ -230,12 +244,12 @@ mod tests {
     fn test_division() {
         let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
         let div_expr = x / y;
-        assert_eq!(div_expr.to_string(), "x/(y)^-1");
+        assert_eq!(div_expr.to_string(), "x/(y)");
 
         let div_expr = div_expr.substitute(&[("x", 4)]);
-        assert_eq!(div_expr.to_string(), "4/(y)^-1");
+        assert_eq!(div_expr.to_string(), "4/(y)");
 
         let div_expr = div_expr.substitute(&[("y", 2)]);
-        assert_eq!(div_expr.to_string(), "4/(2)^-1");
+        assert_eq!(div_expr.to_string(), "4/(2)");
     }
 }
