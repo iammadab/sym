@@ -90,6 +90,14 @@ impl Expression {
             _ => None,
         }
     }
+
+    fn multiplicative_identity() -> Expression {
+        Expression::Integer(1)
+    }
+
+    fn additive_identity() -> Expression {
+        Expression::Integer(0)
+    }
 }
 
 impl Display for Expression {
@@ -169,29 +177,24 @@ mod tests {
 
     fn lagrange_expression(interpolating_set: &[usize]) -> Expression {
         let x = Expression::Variable("x".to_string());
-        let mut terms = vec![];
+        let mut term = Expression::additive_identity();
 
         for val in interpolating_set {
-            // what do we do?
-            // we need to generate the basis function for that value
-            // how?
-            // iterate over the interpolating set again but skip
+            let y = Expression::Variable(format!("y{}", val));
+            let mut basis = Expression::multiplicative_identity();
             for v in interpolating_set {
                 if v == val {
                     continue;
                 }
 
-                // let y_symbol = Expression::Variable()
-                terms.push(
-                    (&x - Expression::Integer(*v as isize))
-                        / (Expression::Integer(*val as isize) - Expression::Integer(*v as isize)),
-                );
+                basis = basis
+                    * ((&x - Expression::Integer(*v as isize))
+                        / (Expression::Integer(*val as isize) - Expression::Integer(*v as isize)))
             }
+            term = term + (y * basis)
         }
 
-        for term in terms {
-            println!("{}", term);
-        }
+        println!("{}", term);
 
         todo!()
     }
