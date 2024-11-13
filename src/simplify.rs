@@ -117,7 +117,7 @@ mod tests {
         // Neg(Neg(a)) = a
         assert_eq!(
             Expression::Neg(Box::new(Expression::Neg(Box::new(Expression::Variable(
-                "a"
+                "a".to_string()
             )))))
             .simplify()
             .to_string(),
@@ -146,7 +146,7 @@ mod tests {
         // Inv(Inv(a)) = a
         assert_eq!(
             Expression::Inv(Box::new(Expression::Inv(Box::new(Expression::Variable(
-                "a"
+                "a".to_string()
             )))))
             .simplify()
             .to_string(),
@@ -181,9 +181,9 @@ mod tests {
         assert_eq!(
             Expression::Add(vec![
                 Expression::Integer(3),
-                Expression::Variable("x"),
+                Expression::Variable("x".to_string()),
                 Expression::Integer(4),
-                Expression::Variable("y")
+                Expression::Variable("y".to_string())
             ])
             .simplify()
             .to_string(),
@@ -192,15 +192,18 @@ mod tests {
 
         assert_eq!(
             Expression::Add(vec![
-                Expression::Add(vec![Expression::Variable("a"), Expression::Integer(2)]),
+                Expression::Add(vec![
+                    Expression::Variable("a".to_string()),
+                    Expression::Integer(2)
+                ]),
                 Expression::Add(vec![
                     Expression::Integer(-2),
-                    Expression::Variable("b"),
+                    Expression::Variable("b".to_string()),
                     Expression::Integer(2)
                 ]),
                 Expression::Add(vec![
                     Expression::Integer(2),
-                    Expression::Variable("c"),
+                    Expression::Variable("c".to_string()),
                     Expression::Integer(2)
                 ]),
             ])
@@ -216,9 +219,9 @@ mod tests {
         assert_eq!(
             Expression::Mul(vec![
                 Expression::Integer(3),
-                Expression::Variable("x"),
+                Expression::Variable("x".to_string()),
                 Expression::Integer(4),
-                Expression::Variable("y")
+                Expression::Variable("y".to_string())
             ])
             .simplify()
             .to_string(),
@@ -227,15 +230,18 @@ mod tests {
 
         assert_eq!(
             Expression::Mul(vec![
-                Expression::Mul(vec![Expression::Variable("a"), Expression::Integer(2)]),
+                Expression::Mul(vec![
+                    Expression::Variable("a".to_string()),
+                    Expression::Integer(2)
+                ]),
                 Expression::Mul(vec![
                     Expression::Integer(-2),
-                    Expression::Variable("b"),
+                    Expression::Variable("b".to_string()),
                     Expression::Integer(2)
                 ]),
                 Expression::Mul(vec![
                     Expression::Integer(2),
-                    Expression::Variable("c"),
+                    Expression::Variable("c".to_string()),
                     Expression::Integer(2)
                 ]),
             ])
