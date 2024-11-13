@@ -301,6 +301,7 @@ mod tests {
 
     #[test]
     fn test_lagrange_simplification() {
-        let a = lagrange_expression(&[0, 1]);
+        let linear_interpolation = lagrange_expression(&[0, 1]);
+        assert_eq!(linear_interpolation.to_string(), "");
     }
 }
