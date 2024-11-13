@@ -88,9 +88,9 @@ impl Display for Expression {
                 expr.fmt(f)
             }
             Expression::Inv(expr) => {
-                f.write_str("/(")?;
+                f.write_str("1/(")?;
                 expr.fmt(f)?;
-                f.write_str(")^-1")
+                f.write_str(")")
             }
             Expression::Add(exprs) => {
                 f.write_str("(")?;
@@ -170,6 +170,13 @@ mod tests {
                 .unwrap(),
             9
         );
+
+        // x / y where x = 1 and y = 2
+        let (x, y) = (Expression::Variable("x"), Expression::Variable("y"));
+        let x_div_y = x / y;
+        let simplified = x_div_y.substitute(&[("x", 1), ("y", 2)]);
+        let result = simplified.evaluate();
+        assert_eq!(result, 0.5);
     }
 
     #[test]
