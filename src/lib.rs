@@ -194,9 +194,7 @@ mod tests {
             term = term + (y * basis)
         }
 
-        println!("{}", term);
-
-        todo!()
+        term
     }
 
     #[test]
