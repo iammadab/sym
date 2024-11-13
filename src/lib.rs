@@ -167,6 +167,35 @@ mod tests {
         (two * x) + (three * y) - z
     }
 
+    fn lagrange_expression(interpolating_set: &[usize]) -> Expression {
+        let x = Expression::Variable("x");
+        let mut terms = vec![];
+
+        for val in interpolating_set {
+            // what do we do?
+            // we need to generate the basis function for that value
+            // how?
+            // iterate over the interpolating set again but skip
+            for v in interpolating_set {
+                if v == val {
+                    continue;
+                }
+
+                // let y_symbol = Expression::Variable()
+                terms.push(
+                    (&x - Expression::Integer(*v as isize))
+                        / (Expression::Integer(*val as isize) - Expression::Integer(*v as isize)),
+                );
+            }
+        }
+
+        for term in terms {
+            println!("{}", term);
+        }
+
+        todo!()
+    }
+
     #[test]
     fn test_expression_creation() {
         assert_eq!(expr1().to_string(), "(2x + 3y - z)");
@@ -251,5 +280,10 @@ mod tests {
 
         let div_expr = div_expr.substitute(&[("y", 2)]);
         assert_eq!(div_expr.to_string(), "4/(2)");
+    }
+
+    #[test]
+    fn test_lagrange_simplification() {
+        let a = lagrange_expression(&[0, 1]);
     }
 }
