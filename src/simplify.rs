@@ -112,6 +112,18 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     // construct compound variables
     let mut variable_rewrite_terms = vec![];
     for (variable_name, count) in variable_map {
+        if count == 1 {
+            variable_rewrite_terms.push(Expression::Variable(variable_name));
+            continue;
+        }
+
+        if count == -1 {
+            variable_rewrite_terms.push(Expression::Neg(Box::new(Expression::Variable(
+                variable_name,
+            ))));
+            continue;
+        }
+
         variable_rewrite_terms.push(Expression::Mul(vec![
             Expression::Integer(count),
             Expression::Variable(variable_name),
@@ -123,8 +135,13 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     if sum != 0 {
         final_terms.push(vec![Expression::Integer(sum)]);
     }
+    let mut final_terms = final_terms.concat();
 
-    Expression::Add(final_terms.concat())
+    if final_terms.len() == 1 {
+        return final_terms.pop().unwrap();
+    }
+
+    Expression::Add(final_terms)
 }
 
 // pub(crate) fn simplify_add(expression: Expression) -> Expression {
