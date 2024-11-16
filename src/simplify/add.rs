@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::Expression;
+use std::collections::HashMap;
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
     // TODO: document process
@@ -24,6 +24,10 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
             _ => true,
         })
         .collect::<Vec<_>>();
+
+    // compound-rewrite
+    // collecting liketerms
+    //
 
     // rewrite variables
     let mut variable_map: HashMap<String, isize> = HashMap::new();
@@ -86,6 +90,33 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     Expression::Add(final_terms)
 }
 
+fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
+    // it is assumed that the expression has already been simplified
+    match expr {
+        Expression::Neg(inner) => (-1, *inner.clone()),
+        Expression::Mul(ref exprs) => {
+            // since this should already be simplified
+            // we assume that there should be only one integer expression
+            // if none exists then the count is 1
+            let mut terms = exprs.clone();
+
+            let mut count = 1;
+            if let Some(pos) = terms
+                .iter()
+                .position(|expr| matches!(expr, Expression::Integer(_)))
+            {
+                if let Expression::Integer(val) = expr {
+                    count = val;
+                }
+                terms.remove(pos);
+            }
+
+            (count, Expression::Mul(terms))
+        }
+        _ => (1, expr),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Expression;
@@ -108,8 +139,8 @@ mod tests {
                 Expression::Integer(4),
                 Expression::Integer(5)
             ])
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "14"
         );
 
@@ -121,8 +152,8 @@ mod tests {
                 Expression::Integer(4),
                 Expression::Variable("y".to_string())
             ])
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "(x + y + 7)"
         );
 
@@ -143,8 +174,8 @@ mod tests {
                     Expression::Integer(2)
                 ]),
             ])
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "(a + b + c + 6)"
         );
     }

@@ -18,12 +18,11 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
                     .map(|t| Expression::Neg(Box::new(t)))
                     .collect(),
             )
-                .simplify()
+            .simplify()
         }
         _ => Expression::Neg(Box::new(neg_inner)),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -36,8 +35,8 @@ mod tests {
             Expression::Neg(Box::new(Expression::Neg(Box::new(Expression::Variable(
                 "a".to_string()
             )))))
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "a"
         );
 

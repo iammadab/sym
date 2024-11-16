@@ -3,6 +3,8 @@ use crate::Expression;
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     let children = expression.children();
 
+    // TODO: handle Neg(Mul) <- should propagate to just one term
+
     // Substitution Rules
     // 1. (a * b) * (c * d) = a * b * c * d
     // 2. Int(x) * Int(y) = Int(x * y)
@@ -57,8 +59,8 @@ mod tests {
                 Expression::Integer(4),
                 Expression::Variable("y".to_string())
             ])
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "12xy"
         );
 
@@ -79,8 +81,8 @@ mod tests {
                     Expression::Integer(2)
                 ]),
             ])
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "-32abc"
         );
     }

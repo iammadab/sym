@@ -22,8 +22,8 @@ mod tests {
             Expression::Inv(Box::new(Expression::Inv(Box::new(Expression::Variable(
                 "a".to_string()
             )))))
-                .simplify()
-                .to_string(),
+            .simplify()
+            .to_string(),
             "a"
         );
     }
