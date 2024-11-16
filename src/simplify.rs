@@ -146,49 +146,6 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     Expression::Add(final_terms)
 }
 
-// pub(crate) fn simplify_add(expression: Expression) -> Expression {
-//     let children = expression.children();
-//
-//     // Substitution Rules
-//     // 1. (a + b) + (c + d) = a + b + c + d
-//     // 2. Int(x) + Int(y) = Int(x + y)
-//
-//     // Sub 1.
-//     // check if we have any addition node in the operand
-//     // if an addition operand exists, merge the operands children with current node
-//     let mut flat_nodes = children.into_iter().flat_map(|child| match child {
-//         Expression::Add(_) => child.children(),
-//         _ => vec![child],
-//     });
-//
-//     // Sub 2.
-//     // compute the sum of integers in the expression
-//     // while removing the individual integer terms from the list
-//     let mut sum = 0;
-//     let mut non_integer_nodes = flat_nodes
-//         .filter(|child| match child {
-//             Expression::Integer(val) => {
-//                 sum += val;
-//                 false
-//             }
-//             _ => true,
-//         })
-//         .collect::<Vec<_>>();
-//
-//     let sum_node = Expression::Integer(sum);
-//
-//     if non_integer_nodes.is_empty() {
-//         return sum_node;
-//     }
-//
-//     // push the sum node into the node list if it's not zero
-//     if sum != 0 {
-//         non_integer_nodes.push(sum_node);
-//     }
-//
-//     Expression::Add(non_integer_nodes)
-// }
-
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     let children = expression.children();
 
