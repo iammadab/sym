@@ -1,4 +1,6 @@
 use crate::Expression;
+use std::collections::HashMap;
+
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     let neg_inner = expression.children().pop().unwrap().simplify();
 
@@ -7,7 +9,7 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     // 2. Neg(integer) => -1 * integer
     // 3. Neg(a + b + c) => Neg(a) + Neg(b) + Neg(c)
     match neg_inner {
-        Expression::Neg(inner_expr) => inner_expr.simplify(),
+        Expression::Neg(inner_expr) => (*inner_expr).clone(),
         Expression::Integer(val) => Expression::Integer(-1 * val),
         Expression::Add(_) => {
             let add_terms = neg_inner.children();
@@ -60,26 +62,21 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
-    let children = expression.children();
+    // TODO: document process
 
-    // Substitution Rules
-    // 1. (a + b) + (c + d) = a + b + c + d
-    // 2. Int(x) + Int(y) = Int(x + y)
+    // simplify each term in the add expression
+    let terms = expression.children().into_iter().map(|c| c.simplify());
 
-    // Sub 1.
-    // check if we have any addition node in the operand
-    // if an addition operand exists, merge the operands children with current node
-    let mut flat_nodes = children.into_iter().flat_map(|child| match child {
+    // collapse terms that are additions
+    let terms = terms.flat_map(|child| match child {
         Expression::Add(_) => child.children(),
         _ => vec![child],
     });
 
-    // Sub 2.
-    // compute the sum of integers in the expression
-    // while removing the individual integer terms from the list
+    // rewrite integers
     let mut sum = 0;
-    let mut non_integer_nodes = flat_nodes
-        .filter(|child| match child {
+    let terms = terms
+        .filter(|t| match t {
             Expression::Integer(val) => {
                 sum += val;
                 false
@@ -88,18 +85,65 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
-    let sum_node = Expression::Integer(sum);
+    // rewrite variables
+    let mut variable_map: HashMap<String, isize> = HashMap::new();
+    let terms = terms
+        .into_iter()
+        .filter(|t| match t {
+            Expression::Variable(var_name) => {
+                variable_map
+                    .entry(var_name.to_string())
+                    .and_modify(|v| *v += 1)
+                    .or_insert(1);
+                false
+            }
+            Expression::Neg(expr) => match &**expr {
+                Expression::Variable(var_name) => {
+                    variable_map
+                        .entry(var_name.to_string())
+                        .and_modify(|v| *v -= 1)
+                        .or_insert(-1);
+                    false
+                }
+                _ => true,
+            },
+            _ => true,
+        })
+        .collect::<Vec<_>>();
 
-    if non_integer_nodes.is_empty() {
-        return sum_node;
+    // construct compound variables
+    let mut variable_rewrite_terms = vec![];
+    for (variable_name, count) in variable_map {
+        if count == 1 {
+            variable_rewrite_terms.push(Expression::Variable(variable_name));
+            continue;
+        }
+
+        if count == -1 {
+            variable_rewrite_terms.push(Expression::Neg(Box::new(Expression::Variable(
+                variable_name,
+            ))));
+            continue;
+        }
+
+        variable_rewrite_terms.push(Expression::Mul(vec![
+            Expression::Integer(count),
+            Expression::Variable(variable_name),
+        ]));
     }
 
-    // push the sum node into the node list if it's not zero
+    // compound rewrite
+    let mut final_terms = vec![terms, variable_rewrite_terms];
     if sum != 0 {
-        non_integer_nodes.push(sum_node);
+        final_terms.push(vec![Expression::Integer(sum)]);
+    }
+    let mut final_terms = final_terms.concat();
+
+    if final_terms.len() == 1 {
+        return final_terms.pop().unwrap();
     }
 
-    Expression::Add(non_integer_nodes)
+    Expression::Add(final_terms)
 }
 
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
