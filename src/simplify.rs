@@ -155,6 +155,12 @@ mod tests {
                 .to_string(),
             "2"
         );
+
+        // Neg(Add(a, b, c)) = Add(Neg(a), Neg(b), Neg(c))
+        let (a, b, c) = (Expression::Variable("a".to_string()), Expression::Variable("b".to_string()), Expression::Variable("c".to_string()));
+        let expr = -(a + b + c);
+        dbg!(expr);
+
     }
 
     #[test]
