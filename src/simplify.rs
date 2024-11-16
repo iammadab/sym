@@ -1,4 +1,5 @@
 use crate::Expression;
+use std::collections::HashMap;
 
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     let neg_inner = expression.children().pop().unwrap().simplify();
@@ -81,6 +82,27 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     });
 
     // rewrite variables
+    let mut variable_map: HashMap<String, isize> = HashMap::new();
+    let terms = terms.filter(|t| match t {
+        Expression::Variable(var_name) => {
+            variable_map
+                .entry(var_name.to_string())
+                .and_modify(|v| *v += 1)
+                .or_insert(1);
+            false
+        }
+        Expression::Neg(expr) => match &**expr {
+            Expression::Variable(var_name) => {
+                variable_map
+                    .entry(var_name.to_string())
+                    .and_modify(|v| *v -= 1)
+                    .or_insert(-1);
+                false
+            }
+            _ => true,
+        },
+        _ => true,
+    });
 
     Expression::Add(terms.collect())
 }
