@@ -157,10 +157,13 @@ mod tests {
         );
 
         // Neg(Add(a, b, c)) = Add(Neg(a), Neg(b), Neg(c))
-        let (a, b, c) = (Expression::Variable("a".to_string()), Expression::Variable("b".to_string()), Expression::Variable("c".to_string()));
-        let expr = -(a + b + c);
-        dbg!(expr);
-
+        let (a, b, c) = (
+            Expression::Variable("a".to_string()),
+            Expression::Variable("b".to_string()),
+            Expression::Variable("c".to_string()),
+        );
+        let expr = -(&a + &b + &c);
+        assert_eq!(expr.simplify(), -a - b - c);
     }
 
     #[test]
