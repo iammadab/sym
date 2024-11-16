@@ -60,7 +60,17 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    // simplify each term in the add expression
     let children = expression.children().into_iter().map(|c| c.simplify());
+
+    // collapse terms that are additions
+    let flat_nodes = children.flat_map(|child| match child {
+        Expression::Add(_) => child.children(),
+        _ => vec![child]
+    });
+
+
+
     todo!()
 }
 
