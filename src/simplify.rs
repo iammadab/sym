@@ -41,8 +41,8 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
     // 3. expr^1 = expr
 
     let mut children = expression.children();
-    let exponent = children.pop().unwrap();
-    let base = children.pop().unwrap();
+    let exponent = children.pop().unwrap().simplify();
+    let base = children.pop().unwrap().simplify();
 
     if matches!(base, Expression::Integer(0)) {
         return Expression::Integer(0);
