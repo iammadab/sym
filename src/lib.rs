@@ -128,7 +128,21 @@ impl PartialEq for Expression {
                 return base1.eq(base2) && exponent1.eq(exponent2);
             }
             (Expression::Add(exprs1), Expression::Add(exprs2)) => {
-                todo!()
+                if exprs1.len() != exprs2.len() {
+                    return false;
+                }
+
+                let mut exprs2 = exprs2.clone();
+
+                for expr in exprs1 {
+                    if let Some(pos) = exprs2.iter().position(|expr2| expr.eq(expr2)) {
+                        exprs2.remove(pos);
+                    } else {
+                        return false;
+                    }
+                }
+
+                true
             }
             (Expression::Mul(exprs1), Expression::Mul(exprs2)) => {
                 todo!()
