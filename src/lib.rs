@@ -5,7 +5,7 @@ use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, si
 use std::fmt::{Display, Formatter, Write};
 use std::ops::Neg;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 enum Expression {
     Variable(String),
     Integer(isize),
@@ -114,6 +114,39 @@ impl Expression {
 
     fn additive_identity() -> Expression {
         Expression::Integer(0)
+    }
+}
+
+impl PartialEq for Expression {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Expression::Variable(var1), Expression::Variable(var2)) => var1.eq(var2),
+            (Expression::Integer(val1), Expression::Integer(val2)) => val1.eq(val2),
+            (Expression::Neg(expr1), Expression::Neg(expr2)) => expr1.eq(expr2),
+            (Expression::Inv(expr1), Expression::Inv(expr2)) => expr1.eq(expr2),
+            (Expression::Exp(base1, exponent1), Expression::Exp(base2, exponent2)) => {
+                return base1.eq(base2) && exponent1.eq(exponent2);
+            }
+            (Expression::Mul(exprs1), Expression::Mul(exprs2))
+            | (Expression::Add(exprs1), Expression::Add(exprs2)) => {
+                if exprs1.len() != exprs2.len() {
+                    return false;
+                }
+
+                let mut exprs2 = exprs2.clone();
+
+                for expr in exprs1 {
+                    if let Some(pos) = exprs2.iter().position(|expr2| expr.eq(expr2)) {
+                        exprs2.remove(pos);
+                    } else {
+                        return false;
+                    }
+                }
+
+                true
+            }
+            _ => false,
+        }
     }
 }
 
@@ -354,5 +387,79 @@ mod tests {
     fn test_lagrange_simplification() {
         let linear_interpolation = lagrange_expression(&[0, 1]);
         assert_eq!(linear_interpolation.to_string(), "");
+    }
+
+    #[test]
+    fn test_expression_compare() {
+        assert_eq!(Expression::Integer(2), Expression::Integer(2));
+        assert_ne!(Expression::Integer(2), Expression::Integer(3));
+
+        assert_eq!(
+            Expression::Variable("x".to_string()),
+            Expression::Variable("x".to_string())
+        );
+        assert_ne!(
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string())
+        );
+
+        assert_eq!(
+            Expression::Inv(Box::new(Expression::Integer(2))),
+            Expression::Inv(Box::new(Expression::Integer(2)))
+        );
+
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Variable("x".to_string()))),
+            Expression::Neg(Box::new(Expression::Variable("x".to_string())))
+        );
+
+        assert_eq!(
+            Expression::Exp(
+                Box::new(Expression::Variable("x".to_string())),
+                Box::new(Expression::Integer(2))
+            ),
+            Expression::Exp(
+                Box::new(Expression::Variable("x".to_string())),
+                Box::new(Expression::Integer(2))
+            )
+        );
+
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(2),
+                Expression::Variable("x".to_string()),
+                Expression::Exp(
+                    Box::new(Expression::Variable("x".to_string())),
+                    Box::new(Expression::Variable("y".to_string()))
+                )
+            ]),
+            Expression::Add(vec![
+                Expression::Exp(
+                    Box::new(Expression::Variable("x".to_string())),
+                    Box::new(Expression::Variable("y".to_string()))
+                ),
+                Expression::Integer(2),
+                Expression::Variable("x".to_string())
+            ])
+        );
+
+        assert_eq!(
+            Expression::Mul(vec![
+                Expression::Integer(2),
+                Expression::Variable("x".to_string()),
+                Expression::Exp(
+                    Box::new(Expression::Variable("x".to_string())),
+                    Box::new(Expression::Variable("y".to_string()))
+                )
+            ]),
+            Expression::Mul(vec![
+                Expression::Exp(
+                    Box::new(Expression::Variable("x".to_string())),
+                    Box::new(Expression::Variable("y".to_string()))
+                ),
+                Expression::Integer(2),
+                Expression::Variable("x".to_string())
+            ])
+        );
     }
 }
