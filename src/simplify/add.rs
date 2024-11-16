@@ -85,3 +85,67 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
 
     Expression::Add(final_terms)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Expression;
+
+    #[test]
+    fn test_add_simplification() {
+        // 2 integers
+        assert_eq!(
+            Expression::Add(vec![Expression::Integer(2), Expression::Integer(3)])
+                .simplify()
+                .to_string(),
+            "5"
+        );
+
+        // 4 integers
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(2),
+                Expression::Integer(3),
+                Expression::Integer(4),
+                Expression::Integer(5)
+            ])
+                .simplify()
+                .to_string(),
+            "14"
+        );
+
+        // Integers mixed with variables
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Integer(3),
+                Expression::Variable("x".to_string()),
+                Expression::Integer(4),
+                Expression::Variable("y".to_string())
+            ])
+                .simplify()
+                .to_string(),
+            "(x + y + 7)"
+        );
+
+        assert_eq!(
+            Expression::Add(vec![
+                Expression::Add(vec![
+                    Expression::Variable("a".to_string()),
+                    Expression::Integer(2)
+                ]),
+                Expression::Add(vec![
+                    Expression::Integer(-2),
+                    Expression::Variable("b".to_string()),
+                    Expression::Integer(2)
+                ]),
+                Expression::Add(vec![
+                    Expression::Integer(2),
+                    Expression::Variable("c".to_string()),
+                    Expression::Integer(2)
+                ]),
+            ])
+                .simplify()
+                .to_string(),
+            "(a + b + c + 6)"
+        );
+    }
+}

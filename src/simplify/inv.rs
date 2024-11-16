@@ -10,3 +10,21 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
         _ => Expression::Inv(Box::new(child)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Expression;
+
+    #[test]
+    fn test_inverse_simplification() {
+        // Inv(Inv(a)) = a
+        assert_eq!(
+            Expression::Inv(Box::new(Expression::Inv(Box::new(Expression::Variable(
+                "a".to_string()
+            )))))
+                .simplify()
+                .to_string(),
+            "a"
+        );
+    }
+}

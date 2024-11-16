@@ -23,3 +23,47 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
         _ => Expression::Neg(Box::new(neg_inner)),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use crate::Expression;
+
+    #[test]
+    fn test_negation_simplification() {
+        // Neg(Neg(a)) = a
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Neg(Box::new(Expression::Variable(
+                "a".to_string()
+            )))))
+                .simplify()
+                .to_string(),
+            "a"
+        );
+
+        // Neg(2) = -2
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Integer(2)))
+                .simplify()
+                .to_string(),
+            "-2"
+        );
+
+        // Neg(-2) = 2
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Integer(-2)))
+                .simplify()
+                .to_string(),
+            "2"
+        );
+
+        // Neg(Add(a, b, c)) = Add(Neg(a), Neg(b), Neg(c))
+        let (a, b, c) = (
+            Expression::Variable("a".to_string()),
+            Expression::Variable("b".to_string()),
+            Expression::Variable("c".to_string()),
+        );
+        let expr = -(&a + &b + &c);
+        assert_eq!(expr.simplify(), -a - b - c);
+    }
+}
