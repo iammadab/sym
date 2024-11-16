@@ -1,4 +1,5 @@
 use crate::Expression;
+
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     let neg_inner = expression.children().pop().unwrap().simplify();
 
@@ -61,15 +62,24 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
     // simplify each term in the add expression
-    let terms= expression.children().into_iter().map(|c| c.simplify());
+    let terms = expression.children().into_iter().map(|c| c.simplify());
 
     // collapse terms that are additions
     let terms = terms.flat_map(|child| match child {
         Expression::Add(_) => child.children(),
-        _ => vec![child]
+        _ => vec![child],
     });
 
     // rewrite integers
+    let mut sum = 0;
+    let terms = terms.filter(|t| match t {
+        Expression::Integer(val) => {
+            sum += val;
+            false
+        }
+        _ => true,
+    });
+
     // rewrite variables
 
     Expression::Add(terms.collect())
