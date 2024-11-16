@@ -1,13 +1,13 @@
 use crate::Expression;
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
-    let neg_inner = expression.children().pop().unwrap();
+    let neg_inner = expression.children().pop().unwrap().simplify();
 
     // Substitution Rules
     // 1. Neg(Neg(x)) => x
     // 2. Neg(integer) => -1 * integer
     // 3. Neg(a + b + c) => Neg(a) + Neg(b) + Neg(c)
     match neg_inner {
-        Expression::Neg(inner_expr) => (*inner_expr).clone(),
+        Expression::Neg(inner_expr) => inner_expr.simplify(),
         Expression::Integer(val) => Expression::Integer(-1 * val),
         Expression::Add(_) => {
             let add_terms = neg_inner.children();
@@ -24,18 +24,39 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_inv(expression: Expression) -> Expression {
-    let child = expression.children_ref()[0];
+    let child = expression.children().pop().unwrap().simplify();
 
     // Substitution Rules
     // Inv(Inv(x)) => x
     match child {
-        Expression::Inv(inner_expr) => (**inner_expr).clone(),
-        _ => expression,
+        Expression::Inv(inner_expr) => inner_expr.simplify(),
+        _ => Expression::Inv(Box::new(child)),
     }
 }
 
 pub(crate) fn simplify_exp(expression: Expression) -> Expression {
-    expression
+    // Substitution Rules
+    // 1. expr^0 = 1
+    // 2. 0^expr = 0
+    // 3. expr^1 = expr
+
+    let mut children = expression.children();
+    let exponent = children.pop().unwrap().simplify();
+    let base = children.pop().unwrap().simplify();
+
+    if matches!(base, Expression::Integer(0)) {
+        return Expression::Integer(0);
+    }
+
+    if matches!(exponent, Expression::Integer(0)) {
+        return Expression::Integer(1);
+    }
+
+    if matches!(exponent, Expression::Integer(1)) {
+        return base;
+    }
+
+    return Expression::Exp(Box::new(base), Box::new(exponent));
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
@@ -177,6 +198,20 @@ mod tests {
             .to_string(),
             "a"
         );
+    }
+
+    #[test]
+    fn test_exponentiation_simplification() {
+        let x = Expression::Variable("x".to_string());
+
+        let x_to_0 = x.pow(&Expression::Integer(0)).simplify();
+        assert_eq!(x_to_0, Expression::Integer(1));
+
+        let x_to_1 = x.pow(&Expression::Integer(1)).simplify();
+        assert_eq!(x_to_1.to_string(), "x");
+
+        let zero_to_x = Expression::Integer(0).pow(&x).simplify();
+        assert_eq!(zero_to_x.to_string(), "0");
     }
 
     #[test]
