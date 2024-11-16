@@ -62,6 +62,8 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    // TODO: document process
+
     // simplify each term in the add expression
     let terms = expression.children().into_iter().map(|c| c.simplify());
 
