@@ -3,6 +3,7 @@ mod simplify;
 
 use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, simplify_neg};
 use std::fmt::{Display, Formatter, Write};
+use std::ops::Neg;
 
 #[derive(Clone, Debug, PartialEq)]
 enum Expression {
@@ -179,6 +180,14 @@ impl Display for Expression {
                 Ok(())
             }
         }
+    }
+}
+
+impl Neg for Expression {
+    type Output = Expression;
+
+    fn neg(self) -> Self::Output {
+        Expression::Neg(Box::new(self))
     }
 }
 
