@@ -1,6 +1,6 @@
 use crate::Expression;
 pub(crate) fn simplify_neg(expression: Expression) -> Expression {
-    let neg_inner = expression.children().pop().unwrap();
+    let neg_inner = expression.children().pop().unwrap().simplify();
 
     // Substitution Rules
     // 1. Neg(Neg(x)) => x
@@ -24,13 +24,13 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_inv(expression: Expression) -> Expression {
-    let child = expression.children_ref()[0];
+    let child = expression.children().pop().unwrap().simplify();
 
     // Substitution Rules
     // Inv(Inv(x)) => x
     match child {
-        Expression::Inv(inner_expr) => (**inner_expr).clone(),
-        _ => expression,
+        Expression::Inv(inner_expr) => inner_expr.simplify(),
+        _ => Expression::Inv(Box::new(child)),
     }
 }
 
