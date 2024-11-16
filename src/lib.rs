@@ -77,6 +77,10 @@ impl Expression {
         }
     }
 
+    fn pow(&self, exponent: &Expression) -> Self {
+        Self::Exp(Box::new(self.clone()), Box::new(exponent.clone()))
+    }
+
     fn children(self) -> Vec<Self> {
         match self {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![*expr],
@@ -316,6 +320,25 @@ mod tests {
 
         let div_expr = div_expr.substitute(&[("y".to_string(), 2)]);
         assert_eq!(div_expr.to_string(), "4/(2)");
+    }
+
+    #[test]
+    fn test_exponetiation() {
+        assert_eq!(
+            Expression::Exp(
+                Box::new(Expression::Integer(2)),
+                Box::new(Expression::Integer(3))
+            )
+            .evaluate(),
+            8.0
+        );
+
+        let (x, y) = (
+            Expression::Variable("x".to_string()),
+            Expression::Variable("y".to_string()),
+        );
+        let exp_expr = x.pow(&y);
+        assert_eq!(exp_expr.to_string(), "(x^y)");
     }
 
     #[test]
