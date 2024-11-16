@@ -83,9 +83,6 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
-    // construct integer rewrite
-    let integer_rewrite = Expression::Integer(sum);
-
     // rewrite variables
     let mut variable_map: HashMap<String, isize> = HashMap::new();
     let terms = terms
@@ -122,11 +119,12 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     }
 
     // compound rewrite
-    // deal with identities
+    let mut final_terms = vec![terms, variable_rewrite_terms];
+    if sum != 0 {
+        final_terms.push(vec![Expression::Integer(sum)]);
+    }
 
-    let final_terms = vec![vec![integer_rewrite], terms, variable_rewrite_terms].concat();
-
-    Expression::Add(final_terms)
+    Expression::Add(final_terms.concat())
 }
 
 // pub(crate) fn simplify_add(expression: Expression) -> Expression {
