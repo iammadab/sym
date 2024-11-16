@@ -1,7 +1,7 @@
 mod airth_macros;
 mod simplify;
 
-use crate::simplify::{simplify_add, simplify_inv, simplify_mul, simplify_neg};
+use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, simplify_neg};
 use std::fmt::{Display, Formatter, Write};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -10,6 +10,7 @@ enum Expression {
     Integer(isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
+    Exp(Box<Expression>, Box<Expression>),
     Add(Vec<Expression>),
     Mul(Vec<Expression>),
 }
@@ -28,6 +29,10 @@ impl Expression {
             }
             Expression::Neg(expr) => Expression::Neg(Box::new(expr.substitute(substitution_map))),
             Expression::Inv(expr) => Expression::Inv(Box::new(expr.substitute(substitution_map))),
+            Expression::Exp(base_expr, exponent_expr) => Expression::Exp(
+                Box::new(base_expr.substitute(substitution_map)),
+                Box::new(exponent_expr.substitute(substitution_map)),
+            ),
             Expression::Add(exprs) => Expression::Add(
                 exprs
                     .iter()
@@ -53,6 +58,9 @@ impl Expression {
             Expression::Integer(val) => *val as f64,
             Expression::Neg(expr) => expr.evaluate(),
             Expression::Inv(expr) => 1.0 / expr.evaluate(),
+            Expression::Exp(base_expr, exponent_expr) => {
+                base_expr.evaluate().powf(exponent_expr.evaluate())
+            }
             Expression::Add(exprs) => exprs.iter().fold(0.0, |acc, expr| acc + expr.evaluate()),
             Expression::Mul(exprs) => exprs.iter().fold(1.0, |acc, expr| acc * expr.evaluate()),
         }
@@ -62,6 +70,7 @@ impl Expression {
         match self {
             Expression::Neg(_) => simplify_neg(self),
             Expression::Inv(_) => simplify_inv(self),
+            Expression::Exp(..) => simplify_exp(self),
             Expression::Add(_) => simplify_add(self),
             Expression::Mul(_) => simplify_mul(self),
             _ => self,
@@ -71,6 +80,7 @@ impl Expression {
     fn children(self) -> Vec<Self> {
         match self {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![*expr],
+            Expression::Exp(base, exp) => vec![*base, *exp],
             Expression::Add(exprs) | Expression::Mul(exprs) => exprs,
             _ => Vec::with_capacity(0),
         }
@@ -79,11 +89,13 @@ impl Expression {
     fn children_ref(&self) -> Vec<&Self> {
         match self {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
+            Expression::Exp(base, exp) => vec![base, exp],
             Expression::Add(exprs) | Expression::Mul(exprs) => exprs.iter().collect(),
             _ => Vec::with_capacity(0),
         }
     }
 
+    // TODO: get rid of this, only used in test
     fn as_integer(&self) -> Option<isize> {
         match self {
             Expression::Integer(value) => Some(*value),
@@ -111,6 +123,13 @@ impl Display for Expression {
             }
             Expression::Inv(expr) => {
                 f.write_str("1/(")?;
+                expr.fmt(f)?;
+                f.write_str(")")
+            }
+            Expression::Exp(base, expr) => {
+                f.write_str("(")?;
+                base.fmt(f)?;
+                f.write_str("^")?;
                 expr.fmt(f)?;
                 f.write_str(")")
             }

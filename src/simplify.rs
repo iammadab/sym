@@ -22,6 +22,11 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
         _ => expression,
     }
 }
+
+pub(crate) fn simplify_exp(expression: Expression) -> Expression {
+    expression
+}
+
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
     let children = expression.children();
 
