@@ -121,6 +121,9 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         ]));
     }
 
+    // compound rewrite
+    // deal with identities
+
     let final_terms = vec![vec![integer_rewrite], terms, variable_rewrite_terms].concat();
 
     Expression::Add(final_terms)
