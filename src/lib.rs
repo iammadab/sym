@@ -127,7 +127,8 @@ impl PartialEq for Expression {
             (Expression::Exp(base1, exponent1), Expression::Exp(base2, exponent2)) => {
                 return base1.eq(base2) && exponent1.eq(exponent2);
             }
-            (Expression::Add(exprs1), Expression::Add(exprs2)) => {
+            (Expression::Mul(exprs1), Expression::Mul(exprs2))
+            | (Expression::Add(exprs1), Expression::Add(exprs2)) => {
                 if exprs1.len() != exprs2.len() {
                     return false;
                 }
@@ -143,9 +144,6 @@ impl PartialEq for Expression {
                 }
 
                 true
-            }
-            (Expression::Mul(exprs1), Expression::Mul(exprs2)) => {
-                todo!()
             }
             _ => false,
         }
