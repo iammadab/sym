@@ -105,7 +105,7 @@ fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
                 .iter()
                 .position(|expr| matches!(expr, Expression::Integer(_)))
             {
-                if let Expression::Integer(val) = expr {
+                if let Expression::Integer(val) = terms[pos] {
                     count = val;
                 }
                 terms.remove(pos);
@@ -119,6 +119,7 @@ fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
 
 #[cfg(test)]
 mod tests {
+    use crate::simplify::add::coefficient_expression_split;
     use crate::Expression;
 
     #[test]
@@ -177,6 +178,41 @@ mod tests {
             .simplify()
             .to_string(),
             "(a + b + c + 6)"
+        );
+    }
+
+    #[test]
+    fn test_coefficient_split() {
+        assert_eq!(
+            coefficient_expression_split(Expression::Variable("x".to_string())),
+            (1, Expression::Variable("x".to_string()))
+        );
+        assert_eq!(
+            coefficient_expression_split(Expression::Mul(vec![
+                Expression::Variable("x".to_string()),
+                Expression::Variable("y".to_string())
+            ])),
+            (
+                1,
+                Expression::Mul(vec![
+                    Expression::Variable("y".to_string()),
+                    Expression::Variable("x".to_string())
+                ])
+            )
+        );
+        assert_eq!(
+            coefficient_expression_split(Expression::Mul(vec![
+                Expression::Variable("x".to_string()),
+                Expression::Integer(3),
+                Expression::Variable("y".to_string())
+            ])),
+            (
+                3,
+                Expression::Mul(vec![
+                    Expression::Variable("y".to_string()),
+                    Expression::Variable("x".to_string())
+                ])
+            )
         );
     }
 }
