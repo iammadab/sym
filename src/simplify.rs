@@ -60,6 +60,7 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
+    let children = expression.children().into_iter().map(|c| c.simplify());
     todo!()
 }
 
