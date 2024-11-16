@@ -40,7 +40,23 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
     // 2. 0^expr = 0
     // 3. expr^1 = expr
 
-    expression
+    let mut children = expression.children();
+    let exponent = children.pop().unwrap();
+    let base = children.pop().unwrap();
+
+    if matches!(base, Expression::Integer(0)) {
+        return Expression::Integer(0);
+    }
+
+    if matches!(exponent, Expression::Integer(0)) {
+        return Expression::Integer(1);
+    }
+
+    if matches!(exponent, Expression::Integer(1)) {
+        return base;
+    }
+
+    return Expression::Exp(Box::new(base), Box::new(exponent));
 }
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
