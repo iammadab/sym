@@ -5,7 +5,7 @@ use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, si
 use std::fmt::{Display, Formatter, Write};
 use std::ops::Neg;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 enum Expression {
     Variable(String),
     Integer(isize),
@@ -114,6 +114,27 @@ impl Expression {
 
     fn additive_identity() -> Expression {
         Expression::Integer(0)
+    }
+}
+
+impl PartialEq for Expression {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Expression::Variable(var1), Expression::Variable(var2)) => var1.eq(var2),
+            (Expression::Integer(val1), Expression::Integer(val2)) => val1 == val2,
+            (Expression::Neg(expr1), Expression::Neg(expr2)) => expr1.eq(expr2),
+            (Expression::Inv(expr1), Expression::Inv(expr2)) => expr1.eq(expr2),
+            (Expression::Exp(base1, exponent1), Expression::Exp(base2, exponent2)) => {
+                return base1.eq(base2) && exponent1.eq(exponent2);
+            }
+            (Expression::Add(exprs1), Expression::Add(exprs2)) => {
+                todo!()
+            }
+            (Expression::Mul(exprs1), Expression::Mul(exprs2)) => {
+                todo!()
+            }
+            _ => false,
+        }
     }
 }
 
