@@ -7,7 +7,7 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     // 2. Neg(integer) => -1 * integer
     // 3. Neg(a + b + c) => Neg(a) + Neg(b) + Neg(c)
     match neg_inner {
-        Expression::Neg(inner_expr) => (*inner_expr).clone(),
+        Expression::Neg(inner_expr) => inner_expr.simplify(),
         Expression::Integer(val) => Expression::Integer(-1 * val),
         Expression::Add(_) => {
             let add_terms = neg_inner.children();
@@ -35,6 +35,11 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
 }
 
 pub(crate) fn simplify_exp(expression: Expression) -> Expression {
+    // Substitution Rules
+    // 1. expr^0 = 1
+    // 2. 0^expr = 0
+    // 3. expr^1 = expr
+
     expression
 }
 
