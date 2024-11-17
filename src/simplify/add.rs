@@ -25,63 +25,42 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
-    // compound-rewrite
-    // collecting liketerms
-    //
+    // collect like terms
+    let mut variable_map = vec![];
+    // iterate over each term and add it to the list
+    for term in terms {
+        let terms_count_expr_breakdown = coefficient_expression_split(term);
+        search_and_update_count(
+            &mut variable_map,
+            terms_count_expr_breakdown.0,
+            terms_count_expr_breakdown.1,
+        );
+    }
 
-    // rewrite variables
-    let mut variable_map: HashMap<String, isize> = HashMap::new();
-    let terms = terms
-        .into_iter()
-        .filter(|t| match t {
-            Expression::Variable(var_name) => {
-                variable_map
-                    .entry(var_name.to_string())
-                    .and_modify(|v| *v += 1)
-                    .or_insert(1);
-                false
-            }
-            Expression::Neg(expr) => match &**expr {
-                Expression::Variable(var_name) => {
-                    variable_map
-                        .entry(var_name.to_string())
-                        .and_modify(|v| *v -= 1)
-                        .or_insert(-1);
-                    false
-                }
-                _ => true,
-            },
-            _ => true,
-        })
-        .collect::<Vec<_>>();
+    // convert the variable map back into terms
+    let mut variable_map_rewrite_terms = vec![];
+    for (count, expr) in variable_map {
+        if count == 0 {
+            continue;
+        }
 
-    // construct compound variables
-    let mut variable_rewrite_terms = vec![];
-    for (variable_name, count) in variable_map {
         if count == 1 {
-            variable_rewrite_terms.push(Expression::Variable(variable_name));
+            variable_map_rewrite_terms.push(expr);
             continue;
         }
 
         if count == -1 {
-            variable_rewrite_terms.push(Expression::Neg(Box::new(Expression::Variable(
-                variable_name,
-            ))));
+            variable_map_rewrite_terms.push(Expression::Neg(Box::new(expr)));
             continue;
         }
 
-        variable_rewrite_terms.push(Expression::Mul(vec![
-            Expression::Integer(count),
-            Expression::Variable(variable_name),
-        ]));
+        variable_map_rewrite_terms.push(Expression::Mul(vec![Expression::Integer(count), expr]));
     }
 
-    // compound rewrite
-    let mut final_terms = vec![terms, variable_rewrite_terms];
+    let mut final_terms = variable_map_rewrite_terms;
     if sum != 0 {
-        final_terms.push(vec![Expression::Integer(sum)]);
+        final_terms.push(Expression::Integer(sum));
     }
-    let mut final_terms = final_terms.concat();
 
     if final_terms.len() == 1 {
         return final_terms.pop().unwrap();
