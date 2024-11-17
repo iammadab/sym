@@ -1,8 +1,6 @@
 use crate::Expression;
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
-    dbg!(&expression);
-    dbg!("I was called");
     // first we simplify each term in the add expression before apply addition simplification
     let terms = expression.children().into_iter().map(|c| c.simplify());
 
@@ -37,7 +35,6 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
             terms_count_expr_breakdown.1,
         );
     }
-    dbg!(&variable_map);
 
     // convert the variable map back into terms
     let mut variable_map_rewrite_terms = vec![];
@@ -123,22 +120,20 @@ mod tests {
     #[test]
     fn test_add_simplification() {
         // integer collection
-        // assert_eq!(
-        //     Expression::Integer(1) + Expression::Integer(2),
-        //     Expression::Integer(3)
-        // );
-        //
-        // // integer collection, mixed with variables
-        // assert_eq!(
-        //     (Expression::Integer(1)
-        //         + Expression::Variable("x".to_string())
-        //         + Expression::Variable("y".to_string())
-        //         + Expression::Integer(2))
-        //     .to_string(),
-        //     "(x + y + 3)"
-        // );
+        assert_eq!(
+            Expression::Integer(1) + Expression::Integer(2),
+            Expression::Integer(3)
+        );
 
-        dbg!("new test");
+        // integer collection, mixed with variables
+        assert_eq!(
+            (Expression::Integer(1)
+                + Expression::Variable("x".to_string())
+                + Expression::Variable("y".to_string())
+                + Expression::Integer(2))
+            .to_string(),
+            "(x + y + 3)"
+        );
 
         // integer + single variable collection
         assert_eq!(
@@ -158,61 +153,30 @@ mod tests {
             "(4x + y + 3)"
         );
 
-        // // 2 integers
-        // assert_eq!(
-        //     Expression::Add(vec![Expression::Integer(2), Expression::Integer(3)])
-        //         .simplify()
-        //         .to_string(),
-        //     "5"
-        // );
-        //
-        // // 4 integers
-        // assert_eq!(
-        //     Expression::Add(vec![
-        //         Expression::Integer(2),
-        //         Expression::Integer(3),
-        //         Expression::Integer(4),
-        //         Expression::Integer(5)
-        //     ])
-        //     .simplify()
-        //     .to_string(),
-        //     "14"
-        // );
-        //
-        // // Integers mixed with variables
-        // assert_eq!(
-        //     Expression::Add(vec![
-        //         Expression::Integer(3),
-        //         Expression::Variable("x".to_string()),
-        //         Expression::Integer(4),
-        //         Expression::Variable("y".to_string())
-        //     ])
-        //     .simplify()
-        //     .to_string(),
-        //     "(x + y + 7)"
-        // );
-        //
-        // assert_eq!(
-        //     Expression::Add(vec![
-        //         Expression::Add(vec![
-        //             Expression::Variable("a".to_string()),
-        //             Expression::Integer(2)
-        //         ]),
-        //         Expression::Add(vec![
-        //             Expression::Integer(-2),
-        //             Expression::Variable("b".to_string()),
-        //             Expression::Integer(2)
-        //         ]),
-        //         Expression::Add(vec![
-        //             Expression::Integer(2),
-        //             Expression::Variable("c".to_string()),
-        //             Expression::Integer(2)
-        //         ]),
-        //     ])
-        //     .simplify()
-        //     .to_string(),
-        //     "(a + b + c + 6)"
-        // );
+        // integer + multi-variable collection
+        assert_eq!(
+            // 1 + 2 + 2xy + 3yx + xy
+            // 6xy + 3
+            (Expression::Integer(1)
+                + Expression::Integer(2)
+                + Expression::Mul(vec![
+                    Expression::Integer(2),
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ])
+                + Expression::Mul(vec![
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ])
+                + Expression::Mul(vec![
+                    Expression::Variable("y".to_string()),
+                    Expression::Integer(3),
+                    Expression::Variable("x".to_string())
+                ]))
+            .simplify()
+            .to_string(),
+            "(6xy + 3)"
+        );
     }
 
     #[test]

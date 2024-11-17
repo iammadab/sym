@@ -7,7 +7,7 @@ macro_rules! impl_add {
             type Output = Expression;
 
             fn add(self, rhs: $rhs) -> Self::Output {
-                Expression::Add(vec![self.clone(), rhs.clone()])
+                Expression::Add(vec![self.clone(), rhs.clone()]).simplify()
             }
         }
     };
