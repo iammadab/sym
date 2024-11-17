@@ -8,6 +8,23 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         _ => vec![child],
     });
 
+    // remove neg but track parity
+    let mut is_negative = false;
+    let terms = terms.map(|t| match t {
+        Expression::Neg(inner) => {
+            is_negative = !is_negative;
+            *inner
+        }
+        Expression::Inv(ref child) => match &**child {
+            Expression::Neg(inner) => {
+                is_negative = !is_negative;
+                (**inner).clone()
+            }
+            _ => t,
+        },
+        _ => t,
+    });
+
     Expression::Mul(terms.collect())
 }
 
