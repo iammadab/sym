@@ -27,6 +27,27 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
+    // collect integers, collect numerator and denominator
+    let mut numerator_prod = 1;
+    let mut denominator_prod = 1;
+    let terms = terms
+        .into_iter()
+        .filter(|t| match t {
+            Expression::Integer(val) => {
+                numerator_prod *= val;
+                false
+            }
+            Expression::Inv(inner) => match &**inner {
+                Expression::Integer(val) => {
+                    denominator_prod *= val;
+                    false
+                }
+                _ => true,
+            },
+            _ => true,
+        })
+        .collect::<Vec<_>>();
+
     Expression::Mul(terms)
 }
 
