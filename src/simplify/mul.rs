@@ -10,22 +10,24 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
 
     // remove neg but track parity
     let mut is_negative = false;
-    let terms = terms.map(|t| match t {
-        Expression::Neg(inner) => {
-            is_negative = !is_negative;
-            *inner
-        }
-        Expression::Inv(ref child) => match &**child {
+    let terms = terms
+        .map(|t| match t {
             Expression::Neg(inner) => {
                 is_negative = !is_negative;
-                (**inner).clone()
+                *inner
             }
+            Expression::Inv(ref child) => match &**child {
+                Expression::Neg(inner) => {
+                    is_negative = !is_negative;
+                    (**inner).clone()
+                }
+                _ => t,
+            },
             _ => t,
-        },
-        _ => t,
-    });
+        })
+        .collect::<Vec<_>>();
 
-    Expression::Mul(terms.collect())
+    Expression::Mul(terms)
 }
 
 #[cfg(test)]
