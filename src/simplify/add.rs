@@ -1,19 +1,18 @@
 use crate::Expression;
-use std::collections::HashMap;
 
 pub(crate) fn simplify_add(expression: Expression) -> Expression {
-    // TODO: document process
-
-    // simplify each term in the add expression
+    // first we simplify each term in the add expression before apply addition simplification
     let terms = expression.children().into_iter().map(|c| c.simplify());
 
-    // collapse terms that are additions
+    // if the addition expression contains another addition expression within, we collapse this
+    // i.e. (a + b) + c = a + b + c
     let terms = terms.flat_map(|child| match child {
         Expression::Add(_) => child.children(),
         _ => vec![child],
     });
 
-    // rewrite integers
+    // collect the constant integer terms
+    // i.e 1 + 2 + 3 = 6
     let mut sum = 0;
     let terms = terms
         .filter(|t| match t {
@@ -25,9 +24,9 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
-    // collect like terms
+    // collect variable terms
+    // x + y + 2x + z = 3x + y + z
     let mut variable_map = vec![];
-    // iterate over each term and add it to the list
     for term in terms {
         let terms_count_expr_breakdown = coefficient_expression_split(term);
         search_and_update_count(
