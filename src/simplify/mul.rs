@@ -19,7 +19,7 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
             Expression::Inv(ref child) => match &**child {
                 Expression::Neg(inner) => {
                     is_negative = !is_negative;
-                    (**inner).clone()
+                    Expression::Inv(inner.clone())
                 }
                 _ => t,
             },
