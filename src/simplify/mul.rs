@@ -8,7 +8,7 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         _ => vec![child],
     });
 
-    todo!()
+    Expression::Mul(terms.collect())
 }
 
 #[cfg(test)]
