@@ -130,7 +130,7 @@ fn search_and_update_count(store: &mut Vec<(isize, Expression)>, count: isize, e
 
 #[cfg(test)]
 mod tests {
-    use crate::simplify::add::coefficient_expression_split;
+    use crate::simplify::add::{coefficient_expression_split, search_and_update_count};
     use crate::Expression;
 
     #[test]
@@ -225,5 +225,31 @@ mod tests {
                 ])
             )
         );
+    }
+
+    #[test]
+    fn test_search_and_update() {
+        let mut result = vec![];
+        search_and_update_count(&mut result, 2, Expression::Integer(3));
+        assert_eq!(result.len(), 1);
+        search_and_update_count(
+            &mut result,
+            -1,
+            Expression::Add(vec![
+                Expression::Integer(2),
+                Expression::Variable("x".to_string()),
+            ]),
+        );
+        assert_eq!(result.len(), 2);
+        search_and_update_count(
+            &mut result,
+            1,
+            Expression::Add(vec![
+                Expression::Variable("x".to_string()),
+                Expression::Integer(2),
+            ]),
+        );
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1].0, 0);
     }
 }
