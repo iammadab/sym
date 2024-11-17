@@ -1,6 +1,13 @@
 use crate::Expression;
 
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
+    let terms = expression.children().into_iter().map(|c| c.simplify());
+
+    let terms = terms.flat_map(|child| match child {
+        Expression::Mul(_) => child.children(),
+        _ => vec![child],
+    });
+
     todo!()
 }
 
