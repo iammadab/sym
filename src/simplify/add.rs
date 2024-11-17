@@ -117,6 +117,17 @@ fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
     }
 }
 
+fn search_and_update_count(store: &mut Vec<(isize, Expression)>, count: isize, expr: Expression) {
+    for (prev_count, matching_expr) in &mut *store {
+        if expr == *matching_expr {
+            *prev_count += count;
+            return;
+        }
+    }
+
+    store.push((count, expr));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::simplify::add::coefficient_expression_split;
