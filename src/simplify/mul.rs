@@ -67,6 +67,11 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
+    // early return if the integer component will resolve to 0
+    if numerator_prod == 0 {
+        return Expression::Integer(0);
+    }
+
     // collect variable terms (exponentiation + automatic term cancellation)
     let mut variable_map = vec![];
     for term in terms {
@@ -105,6 +110,7 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     // final terms?
     // need to put back the integer after either negating or not
     // what are the conditions for putting the integer or not
+    // if the sum == 0 then we should have stopped a while ago
 
     Expression::Mul(terms)
 }
