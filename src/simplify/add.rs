@@ -64,26 +64,23 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     Expression::Add(final_terms)
 }
 
-fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
+fn coefficient_expression_split(expr: Expression) -> (Expression, Expression) {
     // it is assumed that the expression has already been simplified
     match expr {
-        Expression::Neg(inner) => (-1, *inner.clone()),
+        Expression::Neg(inner) => (Expression::integer(-1), *inner.clone()),
         Expression::Mul(ref exprs) => {
             // since this should already be simplified
             // we assume that there should be only one integer expression
             // if none exists then the count is 1
             let mut terms = exprs.clone();
 
-            let mut count = 1;
-            // if let Some(pos) = terms
-            //     .iter()
-            //     .position(|expr| matches!(expr, Expression::integer(_)))
-            // {
-            //     if let Expression::integer(val) = terms[pos] {
-            //         count = val;
-            //     }
-            //     terms.remove(pos);
-            // }
+            let mut count = Expression::integer(1);
+            if let Some(pos) = terms
+                .iter()
+                .position(|expr| matches!(expr, Expression::Fraction(..)))
+            {
+                count = terms.remove(pos);
+            }
 
             if terms.len() == 1 {
                 (count, terms.pop().unwrap())
@@ -91,7 +88,7 @@ fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
                 (count, Expression::Mul(terms))
             }
         }
-        _ => (1, expr),
+        _ => (Expression::integer(1), expr),
     }
 }
 
