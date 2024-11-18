@@ -70,7 +70,7 @@ fn coefficient_expression_split(expr: Expression) -> (Expression, Expression) {
         Expression::Neg(inner) => (Expression::integer(-1), *inner.clone()),
         Expression::Mul(ref exprs) => {
             // since this should already be simplified
-            // we assume that there should be only one integer expression
+            // we assume that there should be only one fractional expression
             // if none exists then the count is 1
             let mut terms = exprs.clone();
 
@@ -92,10 +92,15 @@ fn coefficient_expression_split(expr: Expression) -> (Expression, Expression) {
     }
 }
 
-fn search_and_update_count(store: &mut Vec<(isize, Expression)>, count: isize, expr: Expression) {
+// TODO: handle duplicate
+fn search_and_update_count(
+    store: &mut Vec<(Expression, Expression)>,
+    count: Expression,
+    expr: Expression,
+) {
     for (prev_count, matching_expr) in &mut *store {
         if expr == *matching_expr {
-            *prev_count += count;
+            *prev_count = prev_count.clone() + count;
             return;
         }
     }
