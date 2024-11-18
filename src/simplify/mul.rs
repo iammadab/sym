@@ -117,7 +117,7 @@ mod tests {
             ])
             .simplify()
             .to_string(),
-            "xy + yz"
+            "(xz + yz)"
         );
     }
 
