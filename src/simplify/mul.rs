@@ -145,7 +145,7 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     };
 
     if is_negative {
-        Expression::Neg(Box::new(final_expression))
+        Expression::Neg(Box::new(final_expression)).simplify()
     } else {
         final_expression
     }
