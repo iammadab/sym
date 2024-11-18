@@ -1,10 +1,11 @@
 mod airth_macros;
 mod simplify;
 
-use crate::simplify::{simplify_add, simplify_exp, simplify_fraction, simplify_inv, simplify_mul, simplify_neg};
+use crate::simplify::{
+    simplify_add, simplify_exp, simplify_fraction, simplify_inv, simplify_mul, simplify_neg,
+};
 use std::fmt::{Display, Formatter, Write};
 use std::ops::Neg;
-use std::ptr::null_mut;
 
 #[derive(Clone, Debug)]
 enum Expression {
@@ -102,6 +103,13 @@ impl Expression {
     fn as_integer(&self) -> Option<isize> {
         match self {
             Expression::Integer(value) => Some(*value),
+            _ => None,
+        }
+    }
+
+    fn decompose_fraction(&self) -> Option<(isize, isize)> {
+        match self {
+            Expression::Fraction(numerator, denominator) => Some((*numerator, *denominator)),
             _ => None,
         }
     }
