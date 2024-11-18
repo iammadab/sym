@@ -3,16 +3,23 @@ use crate::Expression;
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     let terms = expression.children().into_iter().map(|c| c.simplify());
 
-    let terms = terms.flat_map(|child| match child {
-        Expression::Mul(_) => child.children(),
-        _ => vec![child],
-    });
+    let terms = terms
+        .flat_map(|child| match child {
+            Expression::Mul(_) => child.children(),
+            _ => vec![child],
+        })
+        .collect::<Vec<_>>();
 
     // handle distribution
+    // let (addition_node, terms) = partition_at_addition_node(terms);
+    // if addition_node.is_some() {
+    //     todo!()
+    // }
 
     // remove neg but track parity
     let mut is_negative = false;
     let terms = terms
+        .into_iter()
         .map(|t| match t {
             Expression::Neg(inner) => {
                 is_negative = !is_negative;
@@ -65,6 +72,7 @@ fn partition_at_addition_node(mut terms: Vec<Expression>) -> (Option<Expression>
 
 #[cfg(test)]
 mod tests {
+    use crate::simplify::mul::partition_at_addition_node;
     use crate::Expression;
 
     #[test]
@@ -102,6 +110,36 @@ mod tests {
             .to_string(),
             "xy + yz"
         );
+    }
+
+    #[test]
+    fn test_partition_at_addition_node() {
+        assert_eq!(
+            partition_at_addition_node(vec![
+                Expression::Add(vec![
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ]),
+                Expression::Variable("z".to_string()),
+                Expression::Add(vec![
+                    Expression::Variable("m".to_string()),
+                    Expression::Variable("n".to_string())
+                ]),
+            ]),
+            (
+                Some(Expression::Add(vec![
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ])),
+                vec![
+                    Expression::Variable("z".to_string()),
+                    Expression::Add(vec![
+                        Expression::Variable("m".to_string()),
+                        Expression::Variable("n".to_string())
+                    ])
+                ]
+            )
+        )
     }
 
     #[test]
