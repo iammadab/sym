@@ -1,14 +1,17 @@
 mod airth_macros;
 mod simplify;
 
-use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, simplify_neg};
+use crate::simplify::{simplify_add, simplify_exp, simplify_fraction, simplify_inv, simplify_mul, simplify_neg};
 use std::fmt::{Display, Formatter, Write};
 use std::ops::Neg;
+use std::ptr::null_mut;
 
 #[derive(Clone, Debug)]
 enum Expression {
     Variable(String),
     Integer(isize),
+    // fraction(numerator, denominator)
+    Fraction(isize, isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
     // expr(base, exponent)
@@ -21,6 +24,7 @@ impl Expression {
     fn substitute(&self, substitution_map: &[(String, isize)]) -> Self {
         match self {
             Expression::Integer(_) => self.clone(),
+            Expression::Fraction(..) => self.clone(),
             Expression::Variable(var_name) => {
                 for (var, val) in substitution_map {
                     if var == var_name {
@@ -58,6 +62,7 @@ impl Expression {
                 panic!("cannot evaluate when free variable exists");
             }
             Expression::Integer(val) => *val as f64,
+            Expression::Fraction(numerator, denominator) => *numerator as f64 / *denominator as f64,
             Expression::Neg(expr) => expr.evaluate(),
             Expression::Inv(expr) => 1.0 / expr.evaluate(),
             Expression::Exp(base_expr, exponent_expr) => {
@@ -70,6 +75,7 @@ impl Expression {
 
     fn simplify(self) -> Self {
         match self {
+            Expression::Fraction(..) => simplify_fraction(self),
             Expression::Neg(_) => simplify_neg(self),
             Expression::Inv(_) => simplify_inv(self),
             Expression::Exp(..) => simplify_exp(self),
@@ -88,15 +94,6 @@ impl Expression {
             Expression::Neg(expr) | Expression::Inv(expr) => vec![*expr],
             Expression::Exp(base, exp) => vec![*base, *exp],
             Expression::Add(exprs) | Expression::Mul(exprs) => exprs,
-            _ => Vec::with_capacity(0),
-        }
-    }
-
-    fn children_ref(&self) -> Vec<&Self> {
-        match self {
-            Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
-            Expression::Exp(base, exp) => vec![base, exp],
-            Expression::Add(exprs) | Expression::Mul(exprs) => exprs.iter().collect(),
             _ => Vec::with_capacity(0),
         }
     }
@@ -156,6 +153,9 @@ impl Display for Expression {
         match self {
             Expression::Variable(var_name) => f.write_str(var_name),
             Expression::Integer(val) => f.write_str(val.to_string().as_str()),
+            Expression::Fraction(numerator, denominator) => {
+                f.write_str(format!("({numerator}/{denominator})").as_str())
+            }
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
