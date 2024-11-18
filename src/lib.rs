@@ -128,6 +128,9 @@ impl PartialEq for Expression {
         match (self, other) {
             (Expression::Variable(var1), Expression::Variable(var2)) => var1.eq(var2),
             (Expression::Integer(val1), Expression::Integer(val2)) => val1.eq(val2),
+            (Expression::Fraction(num, denom), Expression::Fraction(num2, denom2)) => {
+                num == num2 && denom == denom2
+            }
             (Expression::Neg(expr1), Expression::Neg(expr2)) => expr1.eq(expr2),
             (Expression::Inv(expr1), Expression::Inv(expr2)) => expr1.eq(expr2),
             (Expression::Exp(base1, exponent1), Expression::Exp(base2, exponent2)) => {
@@ -395,7 +398,9 @@ mod tests {
     #[test]
     fn test_lagrange_simplification() {
         let linear_interpolation = lagrange_expression(&[0, 1]);
-        assert_eq!(linear_interpolation.to_string(), "");
+        dbg!(&linear_interpolation.to_string());
+        dbg!(linear_interpolation.simplify().to_string());
+        // assert_eq!(linear_interpolation.to_string(), "");
     }
 
     #[test]

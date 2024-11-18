@@ -1,8 +1,12 @@
+use crate::simplify::gcd;
 use crate::Expression;
 
 pub(crate) fn simplify_fraction(expression: Expression) -> Expression {
-    let (numerator, denominator) = expression.decompose_fraction().unwrap();
-    todo!()
+    let (mut numerator, mut denominator) = expression.decompose_fraction().unwrap();
+    let greatest_divisor = gcd(numerator, denominator);
+    numerator /= greatest_divisor;
+    denominator /= greatest_divisor;
+    Expression::Fraction(numerator, denominator)
 }
 
 #[cfg(test)]
