@@ -35,21 +35,21 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     // convert the variable map back into terms
     let mut variable_map_rewrite_terms = vec![];
     for (count, expr) in variable_map {
-        if count == 0 {
+        if count == Expression::integer(0) {
             continue;
         }
 
-        if count == 1 {
+        if count == Expression::integer(1) {
             variable_map_rewrite_terms.push(expr);
             continue;
         }
 
-        if count == -1 {
+        if count == Expression::integer(-1) {
             variable_map_rewrite_terms.push(Expression::Neg(Box::new(expr)));
             continue;
         }
 
-        variable_map_rewrite_terms.push(Expression::Mul(vec![Expression::integer(count), expr]));
+        variable_map_rewrite_terms.push(Expression::Mul(vec![count, expr]));
     }
 
     let mut final_terms = variable_map_rewrite_terms;
