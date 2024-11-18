@@ -10,15 +10,15 @@ pub(crate) fn simplify_exp(expression: Expression) -> Expression {
     let exponent = children.pop().unwrap().simplify();
     let base = children.pop().unwrap().simplify();
 
-    if matches!(base, Expression::Integer(0)) {
-        return Expression::Integer(0);
+    if matches!(base, Expression::Fraction(0, 1)) {
+        return Expression::integer(0);
     }
 
-    if matches!(exponent, Expression::Integer(0)) {
-        return Expression::Integer(1);
+    if matches!(exponent, Expression::Fraction(0, 1)) {
+        return Expression::integer(1);
     }
 
-    if matches!(exponent, Expression::Integer(1)) {
+    if matches!(exponent, Expression::Fraction(1, 1)) {
         return base;
     }
 
@@ -73,13 +73,13 @@ mod tests {
     fn test_exponentiation_simplification() {
         let x = Expression::Variable("x".to_string());
 
-        let x_to_0 = x.pow(&Expression::Integer(0)).simplify();
-        assert_eq!(x_to_0, Expression::Integer(1));
+        let x_to_0 = x.pow(&Expression::integer(0)).simplify();
+        assert_eq!(x_to_0, Expression::integer(1));
 
-        let x_to_1 = x.pow(&Expression::Integer(1)).simplify();
+        let x_to_1 = x.pow(&Expression::integer(1)).simplify();
         assert_eq!(x_to_1.to_string(), "x");
 
-        let zero_to_x = Expression::Integer(0).pow(&x).simplify();
+        let zero_to_x = Expression::integer(0).pow(&x).simplify();
         assert_eq!(zero_to_x.to_string(), "0");
     }
 

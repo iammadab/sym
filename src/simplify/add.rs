@@ -16,10 +16,6 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     let mut sum = 0;
     let terms = terms
         .filter(|t| match t {
-            Expression::Integer(val) => {
-                sum += val;
-                false
-            }
             _ => true,
         })
         .collect::<Vec<_>>();
@@ -53,12 +49,12 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
             continue;
         }
 
-        variable_map_rewrite_terms.push(Expression::Mul(vec![Expression::Integer(count), expr]));
+        variable_map_rewrite_terms.push(Expression::Mul(vec![Expression::integer(count), expr]));
     }
 
     let mut final_terms = variable_map_rewrite_terms;
     if sum != 0 {
-        final_terms.push(Expression::Integer(sum));
+        final_terms.push(Expression::integer(sum));
     }
 
     if final_terms.len() == 1 {
@@ -79,15 +75,15 @@ fn coefficient_expression_split(expr: Expression) -> (isize, Expression) {
             let mut terms = exprs.clone();
 
             let mut count = 1;
-            if let Some(pos) = terms
-                .iter()
-                .position(|expr| matches!(expr, Expression::Integer(_)))
-            {
-                if let Expression::Integer(val) = terms[pos] {
-                    count = val;
-                }
-                terms.remove(pos);
-            }
+            // if let Some(pos) = terms
+            //     .iter()
+            //     .position(|expr| matches!(expr, Expression::integer(_)))
+            // {
+            //     if let Expression::integer(val) = terms[pos] {
+            //         count = val;
+            //     }
+            //     terms.remove(pos);
+            // }
 
             if terms.len() == 1 {
                 (count, terms.pop().unwrap())
@@ -119,16 +115,16 @@ mod tests {
     fn test_add_simplification() {
         // integer collection
         assert_eq!(
-            Expression::Integer(1) + Expression::Integer(2),
-            Expression::Integer(3)
+            Expression::integer(1) + Expression::integer(2),
+            Expression::integer(3)
         );
 
         // integer collection, mixed with variables
         assert_eq!(
-            (Expression::Integer(1)
+            (Expression::integer(1)
                 + Expression::Variable("x".to_string())
                 + Expression::Variable("y".to_string())
-                + Expression::Integer(2))
+                + Expression::integer(2))
             .to_string(),
             "(x + y + 3)"
         );
@@ -137,11 +133,11 @@ mod tests {
         assert_eq!(
             // 1 + 2 + 2x + y + x + x
             // 4x + y + 3
-            (Expression::Integer(1)
-                + Expression::Integer(2)
+            (Expression::integer(1)
+                + Expression::integer(2)
                 + Expression::Mul(vec![
                     Expression::Variable("x".to_string()),
-                    Expression::Integer(2)
+                    Expression::integer(2)
                 ])
                 + Expression::Variable("y".to_string())
                 + Expression::Variable("x".to_string())
@@ -155,10 +151,10 @@ mod tests {
         assert_eq!(
             // 1 + 2 + 2xy + 3yx + xy
             // 6xy + 3
-            (Expression::Integer(1)
-                + Expression::Integer(2)
+            (Expression::integer(1)
+                + Expression::integer(2)
                 + Expression::Mul(vec![
-                    Expression::Integer(2),
+                    Expression::integer(2),
                     Expression::Variable("x".to_string()),
                     Expression::Variable("y".to_string())
                 ])
@@ -168,7 +164,7 @@ mod tests {
                 ])
                 + Expression::Mul(vec![
                     Expression::Variable("y".to_string()),
-                    Expression::Integer(3),
+                    Expression::integer(3),
                     Expression::Variable("x".to_string())
                 ]))
             .simplify()
@@ -199,7 +195,7 @@ mod tests {
         assert_eq!(
             coefficient_expression_split(Expression::Mul(vec![
                 Expression::Variable("x".to_string()),
-                Expression::Integer(3),
+                Expression::integer(3),
                 Expression::Variable("y".to_string())
             ])),
             (
@@ -215,13 +211,13 @@ mod tests {
     #[test]
     fn test_search_and_update() {
         let mut result = vec![];
-        search_and_update_count(&mut result, 2, Expression::Integer(3));
+        search_and_update_count(&mut result, 2, Expression::integer(3));
         assert_eq!(result.len(), 1);
         search_and_update_count(
             &mut result,
             -1,
             Expression::Add(vec![
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string()),
             ]),
         );
@@ -231,7 +227,7 @@ mod tests {
             1,
             Expression::Add(vec![
                 Expression::Variable("x".to_string()),
-                Expression::Integer(2),
+                Expression::integer(2),
             ]),
         );
         assert_eq!(result.len(), 2);
