@@ -340,11 +340,11 @@ mod tests {
     #[test]
     fn test_basic_simplification_on_init() {
         let a = Expression::integer(2) + Expression::integer(3);
-        assert_eq!(a.to_string(), "5");
+        assert_eq!(a, Expression::integer(5));
     }
 
     #[test]
-    fn test_division() {
+    fn test_division_display() {
         let (x, y) = (
             Expression::Variable("x".to_string()),
             Expression::Variable("y".to_string()),

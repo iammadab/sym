@@ -186,7 +186,7 @@ mod tests {
         );
         assert_eq!(
             Expression::integer(1) / Expression::integer(2),
-            Expression::Inv(Box::new(Expression::integer(2)))
+            Expression::Inv(Box::new(Expression::integer(2))).simplify()
         );
         assert_eq!(
             Expression::integer(-1) / Expression::integer(-1),
