@@ -24,6 +24,10 @@ mod tests {
             Expression::Fraction(-1, 1)
         );
         assert_eq!(
+            Expression::Fraction(-1, 1).simplify(),
+            Expression::Fraction(-1, 1)
+        );
+        assert_eq!(
             Expression::Fraction(-1, -1).simplify(),
             Expression::Fraction(1, 1)
         );
