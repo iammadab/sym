@@ -1,10 +1,11 @@
-use crate::simplify::gcd;
 use crate::Expression;
 use std::ops::DivAssign;
 
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
+    // simplify each term in the mul expression
     let terms = expression.children().into_iter().map(|c| c.simplify());
 
+    // collapse child multiplication terms i.e (a * b) * c = a * b * c
     let terms = terms
         .flat_map(|child| match child {
             Expression::Mul(_) => child.children(),
@@ -49,40 +50,22 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         .collect::<Vec<_>>();
 
     // collect integers, collect numerator and denominator
-    let mut numerator_prod = 1;
-    let mut denominator_prod = 1;
+    let mut fraction_prod = Expression::multiplicative_identity();
     let terms = terms
         .into_iter()
         .filter(|t| match t {
-            Expression::Integer(val) => {
-                numerator_prod *= val;
+            Expression::Fraction(..) => {
+                fraction_prod = multiply_fraction(&fraction_prod, &t);
                 false
             }
-            Expression::Inv(inner) => match &**inner {
-                Expression::Integer(val) => {
-                    denominator_prod *= val;
-                    false
-                }
-                _ => true,
-            },
             _ => true,
         })
         .collect::<Vec<_>>();
 
-    // merge negation parity into one
-    is_negative = is_negative ^ numerator_prod.is_negative() ^ denominator_prod.is_negative();
-    numerator_prod = numerator_prod.abs();
-    denominator_prod = denominator_prod.abs();
-
-    // early return if the integer component will resolve to 0
-    if numerator_prod == 0 {
-        return Expression::Integer(0);
+    // early return if the fraction component will resolve to 0
+    if fraction_prod == Expression::integer(0) {
+        return fraction_prod;
     }
-
-    // reduce denominator and numerator to simplest terms
-    let largest_factor = gcd(numerator_prod, denominator_prod);
-    numerator_prod = numerator_prod / largest_factor;
-    denominator_prod = denominator_prod / largest_factor;
 
     // collect variable terms (exponentiation + automatic term cancellation)
     let mut variable_map = vec![];
@@ -98,45 +81,20 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     // convert the variable back into terms
     let mut variable_map_rewrite_terms = vec![];
     for (power_expression, expr) in variable_map {
-        // handle special integer power cases
-        if let Expression::Integer(val) = power_expression {
-            if val == 0 {
-                // expr^0 = 1
-                continue;
-            }
-
-            if val < 0 {
-                // negative power should be inverted
-                variable_map_rewrite_terms.push(Expression::Inv(Box::new(expr)));
-                continue;
-            }
-
-            if val == 1 {
-                // expr^1 = expr
-                variable_map_rewrite_terms.push(expr);
-                continue;
-            }
-        }
-
         variable_map_rewrite_terms
-            .push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
+            .push(Expression::Exp(Box::new(expr), Box::new(power_expression)).simplify());
     }
 
     // build final terms
     let mut final_terms = vec![];
-    if numerator_prod != 1 {
-        final_terms.push(Expression::Integer(numerator_prod));
-    }
-    if denominator_prod != 1 {
-        final_terms.push(Expression::Inv(Box::new(Expression::Integer(
-            denominator_prod,
-        ))));
+    if fraction_prod != Expression::integer(1) {
+        final_terms.push(fraction_prod);
     }
     final_terms.extend(variable_map_rewrite_terms);
 
     let final_expression = if final_terms.len() == 0 {
         // if no term remain (i.e. all terms cancelled out) then return 1
-        Expression::Integer(1)
+        Expression::integer(1)
     } else if final_terms.len() == 1 {
         // if only one term left no need to rap term in Mul
         final_terms.pop().unwrap()
@@ -167,9 +125,9 @@ fn power_expression_split(expr: Expression) -> (Expression, Expression) {
         Expression::Exp(base, power) => (*power, *base),
         Expression::Inv(expr) => {
             let (expr_power, expr_body) = power_expression_split(*expr);
-            (Expression::Integer(-1) * expr_power, expr_body)
+            (Expression::integer(-1) * expr_power, expr_body)
         }
-        _ => (Expression::Integer(1), expr),
+        _ => (Expression::integer(1), expr),
     }
 }
 
@@ -185,6 +143,12 @@ fn search_and_update_expr_count(
         }
     }
     store.push((count, expr))
+}
+
+fn multiply_fraction(a: &Expression, b: &Expression) -> Expression {
+    let (a_num, a_denom) = a.decompose_fraction().unwrap();
+    let (b_num, b_denom) = b.decompose_fraction().unwrap();
+    Expression::Fraction(a_num * b_num, a_denom * b_denom).simplify()
 }
 
 #[cfg(test)]
@@ -212,17 +176,34 @@ mod tests {
                 Expression::Variable("z".to_string())
             ])
         );
-
     }
 
     #[test]
     fn test_integer_division() {
-        assert_eq!(Expression::Integer(1) / Expression::Integer(1), Expression::Integer(1));
-        assert_eq!(Expression::Integer(1) / Expression::Integer(2), Expression::Inv(Box::new(Expression::Integer(2))));
-        assert_eq!(Expression::Integer(-1) / Expression::Integer(-1), Expression::Integer(1));
-        assert_eq!(Expression::Integer(-1) / Expression::Integer(1), Expression::Integer(-1));
-        assert_eq!(Expression::Integer(4) / Expression::Integer(2), Expression::Integer(2));
-        assert_eq!(Expression::Integer(8) / Expression::Integer(6), Expression::Integer(4) / Expression::Integer(3));
+        assert_eq!(
+            Expression::integer(1) / Expression::integer(1),
+            Expression::integer(1)
+        );
+        assert_eq!(
+            Expression::integer(1) / Expression::integer(2),
+            Expression::Inv(Box::new(Expression::integer(2))).simplify()
+        );
+        assert_eq!(
+            Expression::integer(-1) / Expression::integer(-1),
+            Expression::integer(1)
+        );
+        assert_eq!(
+            Expression::integer(-1) / Expression::integer(1),
+            Expression::integer(-1)
+        );
+        assert_eq!(
+            Expression::integer(4) / Expression::integer(2),
+            Expression::integer(2)
+        );
+        assert_eq!(
+            Expression::integer(8) / Expression::integer(6),
+            Expression::integer(4) / Expression::integer(3)
+        );
     }
 
     #[test]
@@ -287,10 +268,10 @@ mod tests {
         // x^2
         assert_eq!(
             power_expression_split(
-                Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
+                Expression::Variable("x".to_string()).pow(&Expression::integer(2))
             ),
             (
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string())
             )
         );
@@ -298,10 +279,10 @@ mod tests {
         // 1 / (x^2) = x^-2
         assert_eq!(
             power_expression_split(Expression::Inv(Box::new(
-                Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
+                Expression::Variable("x".to_string()).pow(&Expression::integer(2))
             ))),
             (
-                Expression::Integer(-2),
+                Expression::integer(-2),
                 Expression::Variable("x".to_string())
             )
         );
@@ -310,7 +291,7 @@ mod tests {
         assert_eq!(
             power_expression_split(Expression::Variable("x".to_string())),
             (
-                Expression::Integer(1),
+                Expression::integer(1),
                 Expression::Variable("x".to_string())
             )
         );
@@ -321,7 +302,7 @@ mod tests {
                 "x".to_string()
             )))),
             (
-                Expression::Integer(-1),
+                Expression::integer(-1),
                 Expression::Variable("x".to_string())
             )
         );
@@ -330,20 +311,20 @@ mod tests {
     #[test]
     fn test_search_and_update_expr() {
         let mut result = vec![];
-        search_and_update_expr_count(&mut result, Expression::Integer(2), Expression::Integer(3));
+        search_and_update_expr_count(&mut result, Expression::integer(2), Expression::integer(3));
         assert_eq!(result.len(), 1);
         search_and_update_expr_count(
             &mut result,
-            Expression::Integer(-3),
+            Expression::integer(-3),
             Expression::Variable("x".to_string()),
         );
         assert_eq!(result.len(), 2);
         search_and_update_expr_count(
             &mut result,
-            Expression::Integer(2),
+            Expression::integer(2),
             Expression::Variable("x".to_string()),
         );
         assert_eq!(result.len(), 2);
-        assert_eq!(result[1].0, Expression::Integer(-1));
+        assert_eq!(result[1].0, Expression::integer(-1));
     }
 }

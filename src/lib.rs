@@ -1,14 +1,17 @@
 mod airth_macros;
 mod simplify;
 
-use crate::simplify::{simplify_add, simplify_exp, simplify_inv, simplify_mul, simplify_neg};
+use crate::simplify::{
+    simplify_add, simplify_exp, simplify_fraction, simplify_inv, simplify_mul, simplify_neg,
+};
 use std::fmt::{Display, Formatter, Write};
 use std::ops::Neg;
 
 #[derive(Clone, Debug)]
 enum Expression {
     Variable(String),
-    Integer(isize),
+    // fraction(numerator, denominator)
+    Fraction(isize, isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
     // expr(base, exponent)
@@ -20,11 +23,11 @@ enum Expression {
 impl Expression {
     fn substitute(&self, substitution_map: &[(String, isize)]) -> Self {
         match self {
-            Expression::Integer(_) => self.clone(),
+            Expression::Fraction(..) => self.clone(),
             Expression::Variable(var_name) => {
                 for (var, val) in substitution_map {
                     if var == var_name {
-                        return Self::Integer(*val);
+                        return Self::integer(*val);
                     }
                 }
                 self.clone()
@@ -57,7 +60,7 @@ impl Expression {
                 // variables shouldn't exist on evaluation call, panic
                 panic!("cannot evaluate when free variable exists");
             }
-            Expression::Integer(val) => *val as f64,
+            Expression::Fraction(numerator, denominator) => *numerator as f64 / *denominator as f64,
             Expression::Neg(expr) => expr.evaluate(),
             Expression::Inv(expr) => 1.0 / expr.evaluate(),
             Expression::Exp(base_expr, exponent_expr) => {
@@ -70,6 +73,7 @@ impl Expression {
 
     fn simplify(self) -> Self {
         match self {
+            Expression::Fraction(..) => simplify_fraction(self),
             Expression::Neg(_) => simplify_neg(self),
             Expression::Inv(_) => simplify_inv(self),
             Expression::Exp(..) => simplify_exp(self),
@@ -92,29 +96,23 @@ impl Expression {
         }
     }
 
-    fn children_ref(&self) -> Vec<&Self> {
-        match self {
-            Expression::Neg(expr) | Expression::Inv(expr) => vec![expr],
-            Expression::Exp(base, exp) => vec![base, exp],
-            Expression::Add(exprs) | Expression::Mul(exprs) => exprs.iter().collect(),
-            _ => Vec::with_capacity(0),
-        }
+    fn integer(val: isize) -> Expression {
+        Expression::Fraction(val, 1)
     }
 
-    // TODO: get rid of this, only used in test
-    fn as_integer(&self) -> Option<isize> {
+    fn decompose_fraction(&self) -> Option<(isize, isize)> {
         match self {
-            Expression::Integer(value) => Some(*value),
+            Expression::Fraction(numerator, denominator) => Some((*numerator, *denominator)),
             _ => None,
         }
     }
 
     fn multiplicative_identity() -> Expression {
-        Expression::Integer(1)
+        Expression::integer(1)
     }
 
     fn additive_identity() -> Expression {
-        Expression::Integer(0)
+        Expression::integer(0)
     }
 }
 
@@ -122,7 +120,9 @@ impl PartialEq for Expression {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Expression::Variable(var1), Expression::Variable(var2)) => var1.eq(var2),
-            (Expression::Integer(val1), Expression::Integer(val2)) => val1.eq(val2),
+            (Expression::Fraction(num, denom), Expression::Fraction(num2, denom2)) => {
+                num == num2 && denom == denom2
+            }
             (Expression::Neg(expr1), Expression::Neg(expr2)) => expr1.eq(expr2),
             (Expression::Inv(expr1), Expression::Inv(expr2)) => expr1.eq(expr2),
             (Expression::Exp(base1, exponent1), Expression::Exp(base2, exponent2)) => {
@@ -155,7 +155,9 @@ impl Display for Expression {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Expression::Variable(var_name) => f.write_str(var_name),
-            Expression::Integer(val) => f.write_str(val.to_string().as_str()),
+            Expression::Fraction(numerator, denominator) => {
+                f.write_str(format!("({numerator}/{denominator})").as_str())
+            }
             Expression::Neg(expr) => {
                 f.write_str("-")?;
                 expr.fmt(f)
@@ -182,13 +184,6 @@ impl Display for Expression {
 
                 for expr in expr_iter {
                     match expr {
-                        Expression::Integer(val) => {
-                            if val.is_negative() {
-                                f.write_str(format!(" - {}", val.abs().to_string()).as_str())?;
-                                continue;
-                            }
-                            f.write_str(format!(" + {}", expr.to_string()).as_str())?;
-                        }
                         Expression::Neg(expr) => {
                             f.write_str(format!(" - {}", expr.to_string()).as_str())?;
                             continue;
@@ -236,7 +231,7 @@ mod tests {
             Expression::Variable("y".to_string()),
             Expression::Variable("z".to_string()),
         );
-        let (two, three) = (Expression::Integer(2), Expression::Integer(3));
+        let (two, three) = (Expression::integer(2), Expression::integer(3));
 
         (two * x) + (three * y) - z
     }
@@ -254,8 +249,8 @@ mod tests {
                 }
 
                 basis = basis
-                    * ((&x - Expression::Integer(*v as isize))
-                        / (Expression::Integer(*val as isize) - Expression::Integer(*v as isize)))
+                    * ((&x - Expression::integer(*v as isize))
+                        / (Expression::integer(*val as isize) - Expression::integer(*v as isize)))
             }
             term = term + (y * basis)
         }
@@ -280,9 +275,8 @@ mod tests {
                     ("y".to_string(), 3),
                     ("z".to_string(), 4)
                 ])
-                .as_integer()
-                .unwrap(),
-            9
+                .evaluate(),
+            9.0
         );
 
         // x / y where x = 1 and y = 2
@@ -339,18 +333,18 @@ mod tests {
         let z = &x - &y;
         assert_eq!(z.to_string(), "(x - y)");
 
-        let z = x - (y * Expression::Integer(2));
+        let z = x - (y * Expression::integer(2));
         assert_eq!(z.to_string(), "(x - 2y)");
     }
 
     #[test]
     fn test_basic_simplification_on_init() {
-        let a = Expression::Integer(2) + Expression::Integer(3);
-        assert_eq!(a.to_string(), "5");
+        let a = Expression::integer(2) + Expression::integer(3);
+        assert_eq!(a, Expression::integer(5));
     }
 
     #[test]
-    fn test_division() {
+    fn test_division_display() {
         let (x, y) = (
             Expression::Variable("x".to_string()),
             Expression::Variable("y".to_string()),
@@ -369,8 +363,8 @@ mod tests {
     fn test_exponetiation() {
         assert_eq!(
             Expression::Exp(
-                Box::new(Expression::Integer(2)),
-                Box::new(Expression::Integer(3))
+                Box::new(Expression::integer(2)),
+                Box::new(Expression::integer(3))
             )
             .evaluate(),
             8.0
@@ -392,8 +386,8 @@ mod tests {
 
     #[test]
     fn test_expression_compare() {
-        assert_eq!(Expression::Integer(2), Expression::Integer(2));
-        assert_ne!(Expression::Integer(2), Expression::Integer(3));
+        assert_eq!(Expression::integer(2), Expression::integer(2));
+        assert_ne!(Expression::integer(2), Expression::integer(3));
 
         assert_eq!(
             Expression::Variable("x".to_string()),
@@ -405,8 +399,8 @@ mod tests {
         );
 
         assert_eq!(
-            Expression::Inv(Box::new(Expression::Integer(2))),
-            Expression::Inv(Box::new(Expression::Integer(2)))
+            Expression::Inv(Box::new(Expression::integer(2))),
+            Expression::Inv(Box::new(Expression::integer(2)))
         );
 
         assert_eq!(
@@ -417,17 +411,17 @@ mod tests {
         assert_eq!(
             Expression::Exp(
                 Box::new(Expression::Variable("x".to_string())),
-                Box::new(Expression::Integer(2))
+                Box::new(Expression::integer(2))
             ),
             Expression::Exp(
                 Box::new(Expression::Variable("x".to_string())),
-                Box::new(Expression::Integer(2))
+                Box::new(Expression::integer(2))
             )
         );
 
         assert_eq!(
             Expression::Add(vec![
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string()),
                 Expression::Exp(
                     Box::new(Expression::Variable("x".to_string())),
@@ -439,14 +433,14 @@ mod tests {
                     Box::new(Expression::Variable("x".to_string())),
                     Box::new(Expression::Variable("y".to_string()))
                 ),
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string())
             ])
         );
 
         assert_eq!(
             Expression::Mul(vec![
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string()),
                 Expression::Exp(
                     Box::new(Expression::Variable("x".to_string())),
@@ -458,7 +452,7 @@ mod tests {
                     Box::new(Expression::Variable("x".to_string())),
                     Box::new(Expression::Variable("y".to_string()))
                 ),
-                Expression::Integer(2),
+                Expression::integer(2),
                 Expression::Variable("x".to_string())
             ])
         );
