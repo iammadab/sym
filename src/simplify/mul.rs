@@ -67,6 +67,11 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
+    // add back the negation parity
+    if is_negative {
+        numerator_prod *= -1;
+    }
+
     // early return if the integer component will resolve to 0
     if numerator_prod == 0 {
         return Expression::Integer(0);
@@ -76,7 +81,11 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     let mut variable_map = vec![];
     for term in terms {
         let term_power_expression = power_expression_split(term);
-        search_and_update_expr_count(&mut variable_map, term_power_expression.0, term_power_expression.1);
+        search_and_update_expr_count(
+            &mut variable_map,
+            term_power_expression.0,
+            term_power_expression.1,
+        );
     }
 
     // convert the variable back into terms
@@ -102,17 +111,22 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
             }
         }
 
-        variable_map_rewrite_terms.push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
+        variable_map_rewrite_terms
+            .push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
     }
 
     // TODO: consider the following rewrite rule Mul([Inv(..), Inv(..), .. ]) => Inv(Mul(...))
 
-    // final terms?
-    // need to put back the integer after either negating or not
-    // what are the conditions for putting the integer or not
-    // if the sum == 0 then we should have stopped a while ago
+    let final_terms = vec![
+        vec![
+            Expression::Integer(numerator_prod),
+            Expression::Inv(Box::new(Expression::Integer(denominator_prod))),
+        ],
+        variable_map_rewrite_terms,
+    ]
+    .concat();
 
-    Expression::Mul(terms)
+    Expression::Mul(final_terms)
 }
 
 fn partition_at_addition_node(mut terms: Vec<Expression>) -> (Option<Expression>, Vec<Expression>) {
@@ -254,7 +268,7 @@ mod tests {
                 Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
             ))),
             (
-                Expression::Integer(2),
+                Expression::Integer(-2),
                 Expression::Variable("x".to_string())
             )
         );
