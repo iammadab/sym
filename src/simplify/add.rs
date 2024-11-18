@@ -100,7 +100,6 @@ fn coefficient_expression_split(expr: Expression) -> (Expression, Expression) {
     }
 }
 
-// TODO: handle duplicate
 fn search_and_update_count(
     store: &mut Vec<(Expression, Expression)>,
     count: Expression,
