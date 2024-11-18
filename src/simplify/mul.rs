@@ -11,10 +11,19 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         .collect::<Vec<_>>();
 
     // handle distribution
-    // let (addition_node, terms) = partition_at_addition_node(terms);
-    // if addition_node.is_some() {
-    //     todo!()
-    // }
+    let (addition_node, terms) = partition_at_addition_node(terms);
+    if addition_node.is_some() {
+        let terms_as_mul_node = Expression::Mul(terms);
+        return Expression::Add(
+            addition_node
+                .unwrap()
+                .children()
+                .into_iter()
+                .map(|c| c * &terms_as_mul_node)
+                .collect(),
+        )
+        .simplify();
+    }
 
     // remove neg but track parity
     let mut is_negative = false;
