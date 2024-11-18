@@ -212,6 +212,17 @@ mod tests {
                 Expression::Variable("z".to_string())
             ])
         );
+
+    }
+
+    #[test]
+    fn test_integer_division() {
+        assert_eq!(Expression::Integer(1) / Expression::Integer(1), Expression::Integer(1));
+        assert_eq!(Expression::Integer(1) / Expression::Integer(2), Expression::Inv(Box::new(Expression::Integer(2))));
+        assert_eq!(Expression::Integer(-1) / Expression::Integer(-1), Expression::Integer(1));
+        assert_eq!(Expression::Integer(-1) / Expression::Integer(1), Expression::Integer(-1));
+        assert_eq!(Expression::Integer(4) / Expression::Integer(2), Expression::Integer(2));
+        assert_eq!(Expression::Integer(8) / Expression::Integer(6), Expression::Integer(4) / Expression::Integer(3));
     }
 
     #[test]
