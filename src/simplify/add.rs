@@ -49,11 +49,11 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         }
 
         if count == Expression::integer(-1) {
-            variable_map_rewrite_terms.push(Expression::Neg(Box::new(expr)));
+            variable_map_rewrite_terms.push(Expression::Neg(Box::new(expr)).simplify());
             continue;
         }
 
-        variable_map_rewrite_terms.push(Expression::Mul(vec![count, expr]));
+        variable_map_rewrite_terms.push(Expression::Mul(vec![count, expr]).simplify());
     }
 
     let mut final_terms = variable_map_rewrite_terms;

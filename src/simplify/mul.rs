@@ -1,4 +1,3 @@
-use crate::simplify::gcd;
 use crate::Expression;
 use std::ops::DivAssign;
 
