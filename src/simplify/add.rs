@@ -108,8 +108,7 @@ fn search_and_update_count(
 ) {
     for (prev_count, matching_expr) in &mut *store {
         if expr == *matching_expr {
-            // *prev_count = sum_fraction(prev_count, &count);
-            *prev_count = prev_count.clone() + count;
+            *prev_count = sum_fraction(prev_count, &count);
             return;
         }
     }
