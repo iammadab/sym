@@ -222,8 +222,20 @@ mod tests {
                 ])
             )
         );
-
-        // TODO: add fractional test
+        assert_eq!(
+            coefficient_expression_split(Expression::Mul(vec![
+                Expression::Variable("x".to_string()),
+                Expression::Fraction(3, 2),
+                Expression::Variable("y".to_string())
+            ])),
+            (
+                Expression::Fraction(3, 2),
+                Expression::Mul(vec![
+                    Expression::Variable("y".to_string()),
+                    Expression::Variable("x".to_string())
+                ])
+            )
+        );
     }
 
     #[test]
