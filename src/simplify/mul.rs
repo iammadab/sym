@@ -92,6 +92,20 @@ fn power_expression_split(expr: Expression) -> (Expression, Expression) {
     }
 }
 
+fn search_and_update_expr_count(
+    store: &mut Vec<(Expression, Expression)>,
+    count: Expression,
+    expr: Expression,
+) {
+    for (prev_count, matching_expr) in &mut *store {
+        if expr == *matching_expr {
+            *prev_count = prev_count.clone() + count;
+            return;
+        }
+    }
+    store.push((count, expr))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::simplify::mul::{partition_at_addition_node, power_expression_split};
@@ -201,13 +215,21 @@ mod tests {
         // x
         assert_eq!(
             power_expression_split(Expression::Variable("x".to_string())),
-            (Expression::Integer(1), Expression::Variable("x".to_string()))
+            (
+                Expression::Integer(1),
+                Expression::Variable("x".to_string())
+            )
         );
 
         // x^-1
         assert_eq!(
-            power_expression_split(Expression::Inv(Box::new(Expression::Variable("x".to_string())))),
-            (Expression::Integer(-1), Expression::Variable("x".to_string()))
+            power_expression_split(Expression::Inv(Box::new(Expression::Variable(
+                "x".to_string()
+            )))),
+            (
+                Expression::Integer(-1),
+                Expression::Variable("x".to_string())
+            )
         );
     }
 }
