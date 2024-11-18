@@ -67,6 +67,45 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
+    // collect variable terms (exponentiation + automatic term cancellation)
+    let mut variable_map = vec![];
+    for term in terms {
+        let term_power_expression = power_expression_split(term);
+        search_and_update_expr_count(&mut variable_map, term_power_expression.0, term_power_expression.1);
+    }
+
+    // convert the variable back into terms
+    let mut variable_map_rewrite_terms = vec![];
+    for (power_expression, expr) in variable_map {
+        // handle special integer power cases
+        if let Expression::Integer(val) = power_expression {
+            if val == 0 {
+                // expr^0 = 1
+                continue;
+            }
+
+            if val < 0 {
+                // negative power should be inverted
+                variable_map_rewrite_terms.push(Expression::Inv(Box::new(expr)));
+                continue;
+            }
+
+            if val == 1 {
+                // expr^1 = expr
+                variable_map_rewrite_terms.push(expr);
+                continue;
+            }
+        }
+
+        variable_map_rewrite_terms.push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
+    }
+
+    // TODO: consider the following rewrite rule Mul([Inv(..), Inv(..), .. ]) => Inv(Mul(...))
+
+    // final terms?
+    // need to put back the integer after either negating or not
+    // what are the conditions for putting the integer or not
+
     Expression::Mul(terms)
 }
 
