@@ -117,7 +117,9 @@ fn sum_fraction(a: Expression, b: Expression) -> Expression {
 
 #[cfg(test)]
 mod tests {
-    use crate::simplify::add::{coefficient_expression_split, search_and_update_count};
+    use crate::simplify::add::{
+        coefficient_expression_split, search_and_update_count, sum_fraction,
+    };
     use crate::Expression;
 
     #[test]
@@ -241,5 +243,29 @@ mod tests {
         );
         assert_eq!(result.len(), 2);
         assert_eq!(result[1].0, 0);
+    }
+
+    #[test]
+    fn test_sum_fraction() {
+        // 0 - 1 = -1
+        assert_eq!(
+            sum_fraction(
+                Expression::integer(0),
+                Expression::Neg(Box::new(Expression::integer(1))).simplify()
+            ),
+            Expression::integer(-1)
+        );
+
+        // 1/2 + 1/2 = 1
+        assert_eq!(
+            sum_fraction(Expression::Fraction(1, 2), Expression::Fraction(1, 2)),
+            Expression::integer(1)
+        );
+
+        // 1/8 + 2/3 = 19/24
+        assert_eq!(
+            sum_fraction(Expression::Fraction(1, 8), Expression::Fraction(2, 3)),
+            Expression::Fraction(19, 24)
+        );
     }
 }
