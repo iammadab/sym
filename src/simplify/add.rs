@@ -190,7 +190,10 @@ mod tests {
     fn test_coefficient_split() {
         assert_eq!(
             coefficient_expression_split(Expression::Variable("x".to_string())),
-            (1, Expression::Variable("x".to_string()))
+            (
+                Expression::integer(1),
+                Expression::Variable("x".to_string())
+            )
         );
         assert_eq!(
             coefficient_expression_split(Expression::Mul(vec![
@@ -198,7 +201,7 @@ mod tests {
                 Expression::Variable("y".to_string())
             ])),
             (
-                1,
+                Expression::integer(1),
                 Expression::Mul(vec![
                     Expression::Variable("y".to_string()),
                     Expression::Variable("x".to_string())
@@ -212,23 +215,25 @@ mod tests {
                 Expression::Variable("y".to_string())
             ])),
             (
-                3,
+                Expression::integer(3),
                 Expression::Mul(vec![
                     Expression::Variable("y".to_string()),
                     Expression::Variable("x".to_string())
                 ])
             )
         );
+
+        // TODO: add fractional test
     }
 
     #[test]
     fn test_search_and_update() {
         let mut result = vec![];
-        search_and_update_count(&mut result, 2, Expression::integer(3));
+        search_and_update_count(&mut result, Expression::integer(2), Expression::integer(3));
         assert_eq!(result.len(), 1);
         search_and_update_count(
             &mut result,
-            -1,
+            Expression::integer(-1),
             Expression::Add(vec![
                 Expression::integer(2),
                 Expression::Variable("x".to_string()),
@@ -237,14 +242,14 @@ mod tests {
         assert_eq!(result.len(), 2);
         search_and_update_count(
             &mut result,
-            1,
+            Expression::integer(1),
             Expression::Add(vec![
                 Expression::Variable("x".to_string()),
                 Expression::integer(2),
             ]),
         );
         assert_eq!(result.len(), 2);
-        assert_eq!(result[1].0, 0);
+        assert_eq!(result[1].0, Expression::integer(0));
     }
 
     #[test]
