@@ -108,7 +108,9 @@ fn search_and_update_expr_count(
 
 #[cfg(test)]
 mod tests {
-    use crate::simplify::mul::{partition_at_addition_node, power_expression_split};
+    use crate::simplify::mul::{
+        partition_at_addition_node, power_expression_split, search_and_update_expr_count,
+    };
     use crate::Expression;
 
     #[test]
@@ -231,5 +233,25 @@ mod tests {
                 Expression::Variable("x".to_string())
             )
         );
+    }
+
+    #[test]
+    fn test_search_and_update_search_expr() {
+        let mut result = vec![];
+        search_and_update_expr_count(&mut result, Expression::Integer(2), Expression::Integer(3));
+        assert_eq!(result.len(), 1);
+        search_and_update_expr_count(
+            &mut result,
+            Expression::Integer(-3),
+            Expression::Variable("x".to_string()),
+        );
+        assert_eq!(result.len(), 2);
+        search_and_update_expr_count(
+            &mut result,
+            Expression::Integer(2),
+            Expression::Variable("x".to_string()),
+        );
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1].0, Expression::Integer(-1));
     }
 }
