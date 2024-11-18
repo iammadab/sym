@@ -8,6 +8,8 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         _ => vec![child],
     });
 
+    // handle distribution
+
     // remove neg but track parity
     let mut is_negative = false;
     let terms = terms
@@ -51,6 +53,16 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     Expression::Mul(terms)
 }
 
+fn partition_at_addition_node(mut terms: Vec<Expression>) -> (Option<Expression>, Vec<Expression>) {
+    // remove the first add node we find
+    // return that and return rest
+    let mut addition_node = None;
+    if let Some(pos) = terms.iter().position(|x| matches!(x, Expression::Add(_))) {
+        addition_node = Some(terms.remove(pos));
+    }
+    (addition_node, terms)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Expression;
@@ -72,6 +84,23 @@ mod tests {
                 Expression::Variable("y".to_string()),
                 Expression::Variable("z".to_string())
             ])
+        );
+    }
+
+    #[test]
+    fn test_distribution() {
+        // (x + y) * z = xz + yz
+        assert_eq!(
+            Expression::Mul(vec![
+                Expression::Add(vec![
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ]),
+                Expression::Variable("z".to_string())
+            ])
+            .simplify()
+            .to_string(),
+            "xy + yz"
         );
     }
 
