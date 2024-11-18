@@ -61,6 +61,10 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         final_terms.push(sum);
     }
 
+    if final_terms.len() == 0 {
+        return Expression::additive_identity();
+    }
+
     if final_terms.len() == 1 {
         return final_terms.pop().unwrap();
     }
@@ -104,6 +108,7 @@ fn search_and_update_count(
 ) {
     for (prev_count, matching_expr) in &mut *store {
         if expr == *matching_expr {
+            // *prev_count = sum_fraction(prev_count, &count);
             *prev_count = prev_count.clone() + count;
             return;
         }
