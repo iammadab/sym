@@ -11,6 +11,7 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         .collect::<Vec<_>>();
 
     // handle distribution
+    // (a + b) * c = ac + bc
     let (addition_node, terms) = partition_at_addition_node(terms);
     if addition_node.is_some() {
         let terms_as_mul_node = Expression::Mul(terms);
@@ -119,6 +120,16 @@ mod tests {
             .to_string(),
             "(xz + yz)"
         );
+
+        // (a + b) * (c + d)
+        // ac + ad + bc + bd
+        let (a, b, c, d) = (
+            Expression::Variable("a".to_string()),
+            Expression::Variable("b".to_string()),
+            Expression::Variable("c".to_string()),
+            Expression::Variable("d".to_string()),
+        );
+        assert_eq!((&a + &b) * (&c + &d), &a * &c + a * &d + &b * c + &b * &d);
     }
 
     #[test]
