@@ -43,15 +43,13 @@ mod tests {
 
         // Neg(2) = -2
         assert_eq!(
-            Expression::Neg(Box::new(Expression::integer(2)))
-                .simplify(),
+            Expression::Neg(Box::new(Expression::integer(2))).simplify(),
             Expression::integer(-2)
         );
 
         // Neg(-2) = 2
         assert_eq!(
-            Expression::Neg(Box::new(Expression::integer(-2)))
-                .simplify(),
+            Expression::Neg(Box::new(Expression::integer(-2))).simplify(),
             Expression::integer(2)
         );
 

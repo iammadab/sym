@@ -106,6 +106,15 @@ fn search_and_update_count(store: &mut Vec<(isize, Expression)>, count: isize, e
     store.push((count, expr));
 }
 
+fn sum_fraction(a: Expression, b: Expression) -> Expression {
+    // assumes that a and b are factions
+    // m/n + q/p = (mp + qn) / np
+    let (a_num, a_denom) = a.decompose_fraction().unwrap();
+    let (b_num, b_denom) = b.decompose_fraction().unwrap();
+
+    Expression::Fraction((a_num * b_denom) + (b_num * a_denom), a_denom * b_denom).simplify()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::simplify::add::{coefficient_expression_split, search_and_update_count};
