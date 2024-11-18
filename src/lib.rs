@@ -11,6 +11,7 @@ enum Expression {
     Integer(isize),
     Neg(Box<Expression>),
     Inv(Box<Expression>),
+    // expr(base, exponent)
     Exp(Box<Expression>, Box<Expression>),
     Add(Vec<Expression>),
     Mul(Vec<Expression>),

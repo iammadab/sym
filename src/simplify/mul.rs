@@ -80,9 +80,21 @@ fn partition_at_addition_node(mut terms: Vec<Expression>) -> (Option<Expression>
     (addition_node, terms)
 }
 
+// returns -> (power, expression)
+fn power_expression_split(expr: Expression) -> (Expression, Expression) {
+    match expr {
+        Expression::Exp(base, power) => (*power, *base),
+        Expression::Inv(expr) => {
+            let (expr_power, expr_body) = power_expression_split(*expr);
+            (Expression::Integer(-1) * expr_power, expr_body)
+        }
+        _ => (Expression::Integer(1), expr),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::simplify::mul::partition_at_addition_node;
+    use crate::simplify::mul::{partition_at_addition_node, power_expression_split};
     use crate::Expression;
 
     #[test]
@@ -160,5 +172,35 @@ mod tests {
                 ]
             )
         )
+    }
+
+    #[test]
+    fn test_power_expression_split() {
+        // need to test regular exp
+        // need to test single exp
+        // need to test inv with exp
+        // need to test inv regular
+
+        // x^2
+        assert_eq!(
+            power_expression_split(
+                Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
+            ),
+            (
+                Expression::Integer(2),
+                Expression::Variable("x".to_string())
+            )
+        );
+
+        // 1 / (x^2)
+        assert_eq!(
+            power_expression_split(Expression::Inv(Box::new(
+                Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
+            ))),
+            (
+                Expression::Integer(2),
+                Expression::Variable("x".to_string())
+            )
+        );
     }
 }
