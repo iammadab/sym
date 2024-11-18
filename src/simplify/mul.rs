@@ -236,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn test_search_and_update_search_expr() {
+    fn test_search_and_update_expr() {
         let mut result = vec![];
         search_and_update_expr_count(&mut result, Expression::Integer(2), Expression::Integer(3));
         assert_eq!(result.len(), 1);
