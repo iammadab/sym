@@ -7,9 +7,11 @@ pub(crate) fn simplify_neg(expression: Expression) -> Expression {
     // 1. Neg(Neg(x)) => x
     // 2. Neg(integer) => -1 * integer
     // 3. Neg(a + b + c) => Neg(a) + Neg(b) + Neg(c)
+    // 4. Neg(Frac(a, b)) => Frac(-a, b)
     match neg_inner {
         Expression::Neg(inner_expr) => (*inner_expr).clone(),
         Expression::Integer(val) => Expression::Integer(-1 * val),
+        Expression::Fraction(a, b) => Expression::Fraction(-1 * a, b),
         Expression::Add(_) => {
             let add_terms = neg_inner.children();
             Expression::Add(
@@ -54,6 +56,12 @@ mod tests {
                 .simplify()
                 .to_string(),
             "2"
+        );
+
+        // Neg(1/2) = -1 / 2
+        assert_eq!(
+            Expression::Neg(Box::new(Expression::Fraction(1, 2))).simplify(),
+            Expression::Fraction(-1, 2)
         );
 
         // Neg(Add(a, b, c)) = Add(Neg(a), Neg(b), Neg(c))
