@@ -1,4 +1,6 @@
+use crate::simplify::gcd;
 use crate::Expression;
+use std::ops::DivAssign;
 
 pub(crate) fn simplify_mul(expression: Expression) -> Expression {
     let terms = expression.children().into_iter().map(|c| c.simplify());
@@ -67,15 +69,20 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
         })
         .collect::<Vec<_>>();
 
-    // add back the negation parity
-    if is_negative {
-        numerator_prod *= -1;
-    }
+    // merge negation parity into one
+    is_negative = is_negative ^ numerator_prod.is_negative() ^ denominator_prod.is_negative();
+    numerator_prod = numerator_prod.abs();
+    denominator_prod = denominator_prod.abs();
 
     // early return if the integer component will resolve to 0
     if numerator_prod == 0 {
         return Expression::Integer(0);
     }
+
+    // reduce denominator and numerator to simplest terms
+    let largest_factor = gcd(numerator_prod, denominator_prod);
+    numerator_prod = numerator_prod / largest_factor;
+    denominator_prod = denominator_prod / largest_factor;
 
     // collect variable terms (exponentiation + automatic term cancellation)
     let mut variable_map = vec![];
@@ -115,25 +122,33 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
             .push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
     }
 
+    // build final terms
     let mut final_terms = vec![];
-
     if numerator_prod != 1 {
         final_terms.push(Expression::Integer(numerator_prod));
     }
-
     if denominator_prod != 1 {
         final_terms.push(Expression::Inv(Box::new(Expression::Integer(
             denominator_prod,
         ))));
     }
-
     final_terms.extend(variable_map_rewrite_terms);
 
-    if final_terms.len() == 1 {
-        return final_terms.pop().unwrap();
-    }
+    let final_expression = if final_terms.len() == 0 {
+        // if no term remain (i.e. all terms cancelled out) then return 1
+        Expression::Integer(1)
+    } else if final_terms.len() == 1 {
+        // if only one term left no need to rap term in Mul
+        final_terms.pop().unwrap()
+    } else {
+        Expression::Mul(final_terms)
+    };
 
-    Expression::Mul(final_terms)
+    if is_negative {
+        Expression::Neg(Box::new(final_expression))
+    } else {
+        final_expression
+    }
 }
 
 fn partition_at_addition_node(mut terms: Vec<Expression>) -> (Option<Expression>, Vec<Expression>) {
