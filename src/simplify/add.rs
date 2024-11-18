@@ -11,11 +11,15 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
         _ => vec![child],
     });
 
-    // collect the constant integer terms
+    // collect the constant fraction terms
     // i.e 1 + 2 + 3 = 6
-    let mut sum = 0;
+    let mut sum = Expression::additive_identity();
     let terms = terms
         .filter(|t| match t {
+            Expression::Fraction(..) => {
+                sum = sum_fraction(&sum, t);
+                false
+            }
             _ => true,
         })
         .collect::<Vec<_>>();
@@ -53,8 +57,8 @@ pub(crate) fn simplify_add(expression: Expression) -> Expression {
     }
 
     let mut final_terms = variable_map_rewrite_terms;
-    if sum != 0 {
-        final_terms.push(Expression::integer(sum));
+    if sum != Expression::integer(0) {
+        final_terms.push(sum);
     }
 
     if final_terms.len() == 1 {
@@ -108,7 +112,7 @@ fn search_and_update_count(
     store.push((count, expr));
 }
 
-fn sum_fraction(a: Expression, b: Expression) -> Expression {
+fn sum_fraction(a: &Expression, b: &Expression) -> Expression {
     // assumes that a and b are factions
     // m/n + q/p = (mp + qn) / np
     let (a_num, a_denom) = a.decompose_fraction().unwrap();
@@ -138,14 +142,15 @@ mod tests {
                 + Expression::Variable("x".to_string())
                 + Expression::Variable("y".to_string())
                 + Expression::integer(2))
-            .to_string(),
-            "(x + y + 3)"
+            .simplify(),
+            Expression::integer(3)
+                + Expression::Variable("x".to_string())
+                + Expression::Variable("y".to_string())
         );
 
         // integer + single variable collection
         assert_eq!(
             // 1 + 2 + 2x + y + x + x
-            // 4x + y + 3
             (Expression::integer(1)
                 + Expression::integer(2)
                 + Expression::Mul(vec![
@@ -155,9 +160,16 @@ mod tests {
                 + Expression::Variable("y".to_string())
                 + Expression::Variable("x".to_string())
                 + Expression::Variable("x".to_string()))
-            .simplify()
-            .to_string(),
-            "(4x + y + 3)"
+            .simplify(),
+            // 4x + y + 3
+            Expression::Add(vec![
+                Expression::Mul(vec![
+                    Expression::integer(4),
+                    Expression::Variable("x".to_string())
+                ]),
+                Expression::Variable("y".to_string()),
+                Expression::integer(3)
+            ])
         );
 
         // integer + multi-variable collection
@@ -180,9 +192,15 @@ mod tests {
                     Expression::integer(3),
                     Expression::Variable("x".to_string())
                 ]))
-            .simplify()
-            .to_string(),
-            "(6xy + 3)"
+            .simplify(),
+            Expression::Add(vec![
+                Expression::Mul(vec![
+                    Expression::integer(6),
+                    Expression::Variable("x".to_string()),
+                    Expression::Variable("y".to_string())
+                ]),
+                Expression::integer(3)
+            ])
         );
     }
 
@@ -269,21 +287,21 @@ mod tests {
         // 0 - 1 = -1
         assert_eq!(
             sum_fraction(
-                Expression::integer(0),
-                Expression::Neg(Box::new(Expression::integer(1))).simplify()
+                &Expression::integer(0),
+                &Expression::Neg(Box::new(Expression::integer(1))).simplify()
             ),
             Expression::integer(-1)
         );
 
         // 1/2 + 1/2 = 1
         assert_eq!(
-            sum_fraction(Expression::Fraction(1, 2), Expression::Fraction(1, 2)),
+            sum_fraction(&Expression::Fraction(1, 2), &Expression::Fraction(1, 2)),
             Expression::integer(1)
         );
 
         // 1/8 + 2/3 = 19/24
         assert_eq!(
-            sum_fraction(Expression::Fraction(1, 8), Expression::Fraction(2, 3)),
+            sum_fraction(&Expression::Fraction(1, 8), &Expression::Fraction(2, 3)),
             Expression::Fraction(19, 24)
         );
     }
