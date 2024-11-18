@@ -80,7 +80,7 @@ mod tests {
         assert_eq!(x_to_1.to_string(), "x");
 
         let zero_to_x = Expression::integer(0).pow(&x).simplify();
-        assert_eq!(zero_to_x.to_string(), "0");
+        assert_eq!(zero_to_x, Expression::integer(0));
     }
 
     #[test]
