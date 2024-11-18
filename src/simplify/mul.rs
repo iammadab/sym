@@ -115,16 +115,23 @@ pub(crate) fn simplify_mul(expression: Expression) -> Expression {
             .push(Expression::Exp(Box::new(expr), Box::new(power_expression)));
     }
 
-    // TODO: consider the following rewrite rule Mul([Inv(..), Inv(..), .. ]) => Inv(Mul(...))
+    let mut final_terms = vec![];
 
-    let final_terms = vec![
-        vec![
-            Expression::Integer(numerator_prod),
-            Expression::Inv(Box::new(Expression::Integer(denominator_prod))),
-        ],
-        variable_map_rewrite_terms,
-    ]
-    .concat();
+    if numerator_prod != 1 {
+        final_terms.push(Expression::Integer(numerator_prod));
+    }
+
+    if denominator_prod != 1 {
+        final_terms.push(Expression::Inv(Box::new(Expression::Integer(
+            denominator_prod,
+        ))));
+    }
+
+    final_terms.extend(variable_map_rewrite_terms);
+
+    if final_terms.len() == 1 {
+        return final_terms.pop().unwrap();
+    }
 
     Expression::Mul(final_terms)
 }
