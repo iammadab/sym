@@ -176,11 +176,6 @@ mod tests {
 
     #[test]
     fn test_power_expression_split() {
-        // need to test regular exp
-        // need to test single exp
-        // need to test inv with exp
-        // need to test inv regular
-
         // x^2
         assert_eq!(
             power_expression_split(
@@ -192,7 +187,7 @@ mod tests {
             )
         );
 
-        // 1 / (x^2)
+        // 1 / (x^2) = x^-2
         assert_eq!(
             power_expression_split(Expression::Inv(Box::new(
                 Expression::Variable("x".to_string()).pow(&Expression::Integer(2))
@@ -201,6 +196,18 @@ mod tests {
                 Expression::Integer(2),
                 Expression::Variable("x".to_string())
             )
+        );
+
+        // x
+        assert_eq!(
+            power_expression_split(Expression::Variable("x".to_string())),
+            (Expression::Integer(1), Expression::Variable("x".to_string()))
+        );
+
+        // x^-1
+        assert_eq!(
+            power_expression_split(Expression::Inv(Box::new(Expression::Variable("x".to_string())))),
+            (Expression::Integer(-1), Expression::Variable("x".to_string()))
         );
     }
 }
