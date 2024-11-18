@@ -5,8 +5,12 @@ pub(crate) fn simplify_inv(expression: Expression) -> Expression {
 
     // Substitution Rules
     // Inv(Inv(x)) => x
+    // Inv(Frac(a, b)) => Frac(b, a)
     match child {
         Expression::Inv(inner_expr) => inner_expr.simplify(),
+        Expression::Fraction(numerator, denominator) => {
+            Expression::Fraction(denominator, numerator).simplify()
+        }
         _ => Expression::Inv(Box::new(child)),
     }
 }
